@@ -1,0 +1,107 @@
+[
+    {
+        "page": null,
+        "유형": "객관식",
+        "question_data": {
+            "question": "Advanced IPC에서 사용되는 객체를 식별하는데 사용되는 번호는 무엇인가?",
+            "choices": [
+                "A. Facility key",
+                "B. Message passing",
+                "C. Semaphore",
+                "D. Shared Memory"
+            ],
+            "answer": "A",
+            "explanation": "Advanced IPC에서는 'facility key' 라는 번호를 사용하여 객체를 식별합니다."
+        }
+    },
+    {
+        "page": null,
+        "유형": "객관식",
+        "question_data": {
+            "question": "대기 중인 프로세스가 있다면, `fcntl`로 설정한 lock을 적용하고 어떻게 되는가?",
+            "choices": [
+                "A. 즉시 리턴한다",
+                "B. 프로세스를 종료한다",
+                "C. 프로세스가 봉쇄되어 sleep 상태가 된다",
+                "D. 프로세스가 계속 실행된다"
+            ],
+            "answer": "C",
+            "explanation": "`fcntl`로 설정한 lock을 적용하면, 다른 프로세스에 의해 봉쇄되면 sleep 상태가 됩니다."
+        }
+    },
+    {
+        "page": 1,
+        "유형": "빈칸 채우기",
+        "question_data": {
+            "question": "기본개념에 포함된 IPC 설비키(facility key)는 ____ 를 사용하며, 이를 변환하기 위한 함수로는 ftok를 사용한다.",
+            "choices": [
+                "A. 문자열",
+                "B. 숫자"
+            ],
+            "answer": "B",
+            "explanation": "IPC 설비키(facility key)는 IPC 객체를 식별하기 위해 사용하는 숫자다."
+        }
+    },
+    {
+        "page": 12,
+        "유형": "OX문제",
+        "question_data": {
+            "question": "msgrcv 함수를 사용하여 message queue에서 메시지를 읽으면, 해당 메시지는 queue에서 삭제된다.",
+            "choices": [
+                "O",
+                "X"
+            ],
+            "answer": "O",
+            "explanation": "msgrcv 함수를 사용하여 message queue에서 메시지를 읽으면, 읽은 메시지는 큐에서 제거됩니다."
+        }
+    },
+    {
+        "page": 12,
+        "유형": "OX문제",
+        "question_data": {
+            "question": "fcntl 함수를 사용하여 쓰기 락을 설정하면, 다른 프로세스들의 읽기나 쓰기 락을 허용한다.",
+            "choices": [
+                "O",
+                "X"
+            ],
+            "answer": "X",
+            "explanation": "fcntl 함수를 사용하여 쓰기 락을 설정하면, 다른 프로세스들의 읽기나 쓰기 락은 허용되지 않습니다."
+        }
+    },
+    {
+        "page": 12,
+        "유형": "주관식",
+        "question_data": {
+            "question": "msgget 함수의 두 번째 인자인 permflags로 어떤 플래그를 셋팅할 수 있는지 두 가지를 적으시오",
+            "answer": "IPC_CREAT, IPC_EXCL",
+            "explanation": "IPC_CREAT는 메시지큐를 생성하고, 기존의 메시지큐가 있는 경우 덮어쓰지 않습니다. IPC_EXCL는 단지 한개의 메시지큐를 생성하며, IPC_CREAT와 함께 설정된 경우 큐가 존재하는 경우는 실패하여 -1을 반환합니다."
+        }
+    },
+    {
+        "page": 16,
+        "유형": "주관식",
+        "question_data": {
+            "question": "ftok 함수의 기능은 무엇인가?",
+            "answer": "파일이름을 키로 변환",
+            "explanation": "ftok 함수는 파일이름을 IPC 객체를 식별하는 키로 변환하는 기능을 수행합니다."
+        }
+    },
+    {
+        "page": 6,
+        "유형": "서술형",
+        "question_data": {
+            "question": "Advanced IPC의 기본적인 개념에 대해 서술하세요.",
+            "answer": "Advanced IPC는 프로세스 간의 고급 통신을 위한 방법으로, 메시지 전달, 세마포어, 공유 메모리 등의 방법이 있습니다. IPC 설비키라는 개념을 사용하여 각 IPC 객체를 식별하고, 이는 파일 이름처럼 작동합니다. 키의 데이터 타입은 key_t이며, ftok라는 함수를 사용하여 파일 이름을 키로 변환할 수 있습니다. 또한 IPC get 연산을 통해 IPC 객체를 생성하거나 기존의 IPC 객체에 접근할 수 있으며, 이는 create 또는 open과 유사하게 작동합니다. 얻어진 IPC 설비 식별자는 fd와 유사하지만 unique 합니다.",
+            "explanation": null
+        }
+    },
+    {
+        "page": 12,
+        "유형": "서술형",
+        "question_data": {
+            "question": "Record Locking에 대해 설명하세요.",
+            "answer": "Record Locking은 현재 사용 중인 파일의 일부를 잠그는 작업을 의미합니다. 이는 원자적 연산(Atomic operation)으로 이루어진다. 이때 사용되는 라이브러리 함수인 fcntl 함수를 사용하여 잠금을 설정하거나 해제할 수 있습니다. 이때 사용되는 명령은 F_GETLK, F_SETLK, F_SETLKW가 있습니다. F_GETLK는 록 정보를 얻고, F_SETLK는 록을 적용하거나 제거하며, F_SETLKW는 블락된 상태의 프로세스가 있을 경우 sleep 상태로 전환하게 합니다.",
+            "explanation": null
+        }
+    }
+]

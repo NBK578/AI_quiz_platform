@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}문제 생성{% endblock %}
+{% block head %}
+{{ super() }}
+<style>
+  .file-input-card {
+    background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+    border: 2px dashed #6a11cb;
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+  }
+  .file-input-card:hover {
+    transform: scale(1.02);
+    background: linear-gradient(135deg, #c3cfe2, #f5f7fa);
+  }
+  .form-control-lg {
+    height: 60px;
+    font-size: 1.2rem;
+  }
+  .question-type-grid .btn {
+    background: linear-gradient(135deg, #6a11cb, #2575fc);
+    color: white;
+    border: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .question-type-grid .btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+  .collapse:not(.show) {
+    display: block;
+    height: 0;
+    overflow: hidden;
+    transition: height 0.5s ease;
+  }
+  .collapse.show {
+    height: auto;
+    transition: height 0.5s ease;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">문제 생성하기</h2>
+
+<form action="{{ url_for('generate') }}" method="POST" enctype="multipart/form-data" onsubmit="showLoading()">
+  <!-- PDF로 문제 만들기 박스 -->
+  <div class="file-input-card mb-4">
+    <div class="mb-3">
+      <h3 class="mb-3">PDF로 문제 만들기</h3>
+      <label for="file" class="form-label fs-5">파일 선택 (PDF, PNG, JPG 등)</label>
+      <input type="file" class="form-control form-control-lg" id="file" name="file" required data-bs-toggle="tooltip" data-bs-placement="top" title="PDF, PNG, JPG 파일만 업로드 가능합니다.">
+    </div>
+  </div>
+
+  <!-- 상세 사항: 기본은 접힘(collapse), 버튼을 눌러 펼침 -->
+  <div class="text-center mb-3">
+    <button class="btn btn-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#detailSection" 
+            aria-expanded="false" aria-controls="detailSection">
+      상세 사항
+    </button>
+  </div>
+
+  <!-- 접힘/펼침 영역 -->
+  <div class="collapse" id="detailSection">
+    <div class="card card-body mb-4">
+      <h4 class="mb-3">상세 사항</h4>
+
+      <!-- 문제 세트 제목 -->
+      <div class="mb-3">
+        <label for="title" class="form-label">문제 세트 제목</label>
+        <input type="text" class="form-control" id="title" name="title" placeholder="예: 2023년 2학기 중간고사" />
+      </div>
+
+      <!-- 문제 수 & 난이도 -->
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <label for="total_questions" class="form-label">문제 수</label>
+          <input type="number" class="form-control" id="total_questions" name="total_questions" value="9" required>
+        </div>
+        <div class="col-md-6">
+          <label for="difficulty" class="form-label">난이도</label>
+          <select class="form-select" id="difficulty" name="difficulty">
+            <option value="쉬움">쉬움</option>
+            <option value="보통" selected>보통</option>
+            <option value="어려움">어려움</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 문제 유형 선택 (사각형 버튼) -->
+      <div class="mb-3">
+        <label class="form-label">문제 유형 선택</label>
+        <div class="row g-2 question-type-grid">
+          {% for qtype in available_types %}
+            <div class="col-6 col-md-3">
+              <input type="checkbox" class="btn-check" id="qtype_{{ loop.index }}" name="question_types" value="{{ qtype }}" checked>
+              <label class="btn w-100 py-3" for="qtype_{{ loop.index }}">{{ qtype }}</label>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- PDF 페이지 범위 -->
+      <div class="mb-3">
+        <label for="page_range" class="form-label">PDF인 경우 페이지 범위 (예: 1-5)</label>
+        <input type="text" class="form-control" id="page_range" name="page_range">
+      </div>
+    </div>
+  </div>
+
+  <!-- 문제 생성하기 버튼 -->
+  <div class="text-center">
+    <button type="submit" class="btn btn-primary btn-lg px-5">문제 생성하기</button>
+  </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+  function showLoading() {
+    document.getElementById('loading-overlay').style.display = 'flex';
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}내 문제 기록{% endblock %}
+{% block content %}
+<h2 class="mb-4">내 문제 기록</h2>
+<div class="row">
+  {% for ps in problem_sets %}
+    <div class="col-md-6 mb-3">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title">{{ ps.title }}</h5>
+          <p class="card-text">생성일: {{ ps.created_at.strftime("%Y-%m-%d %H:%M") }}</p>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="selected_problem_set" value="{{ ps.id }}" id="ps{{ ps.id }}">
+            <label class="form-check-label" for="ps{{ ps.id }}">선택</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+<form action="{{ url_for('recreate') }}" method="POST">
+  <button type="submit" class="btn btn-primary">선택한 문제로 재출제하기</button>
+</form>
+{% endblock %}

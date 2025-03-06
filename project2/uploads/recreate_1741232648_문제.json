@@ -1,0 +1,107 @@
+[
+    {
+        "page": 1,
+        "유형": "객관식",
+        "question_data": {
+            "question": "파일 허가를 검사할 때, 실패의 경우 어떤 값을 반환하는가?",
+            "choices": [
+                "A. 0",
+                "B. -1",
+                "C. 1",
+                "D. 100"
+            ],
+            "answer": "B",
+            "explanation": "파일 허가 검사에 실패하면, 보통 -1 값을 반환한다."
+        }
+    },
+    {
+        "page": 2,
+        "유형": "객관식",
+        "question_data": {
+            "question": "'umask'로 파일을 생성하려는데, 화일 생성 마스크 설정 중 오류가 발생하면 어떤 값을 반환하는가?",
+            "choices": [
+                "A. 0",
+                "B. -1",
+                "C. 1",
+                "D. 100"
+            ],
+            "answer": "B",
+            "explanation": "'umask'로 파일을 생성 중에 오류가 발생하면, 보통 -1 값을 반환한다."
+        }
+    },
+    {
+        "page": "3, 8, 16",
+        "유형": "빈칸 채우기",
+        "question_data": {
+            "question": "Linux에서 파일을 관리하기 위해 사용하는 객체는 ______ 이다.",
+            "choices": [
+                "A. inode",
+                "B. umask"
+            ],
+            "answer": "A",
+            "explanation": "Linux 시스템에서는 inode라는 객체를 통해 파일을 관리한다."
+        }
+    },
+    {
+        "page": 1,
+        "유형": "OX문제",
+        "question_data": {
+            "question": "'umask'로 파일을 생성하려는데, 화일 생성 마스크 설정 중 오류가 발생하면 특정 값을 반환한다.",
+            "choices": [
+                "O",
+                "X"
+            ],
+            "answer": "O",
+            "explanation": "PDF에 따르면, 'umask'로 파일을 생성하려는데, 화일 생성 마스크 설정 중 오류가 발생하면 특정 값을 반환한다는 내용이 포함되어 있다."
+        }
+    },
+    {
+        "page": 2,
+        "유형": "OX문제",
+        "question_data": {
+            "question": "파일에 대한 읽기, 쓰기, 실행 권한은 다중 사용자 시스템에서 가장 기본적인 보안 기능이다.",
+            "choices": [
+                "O",
+                "X"
+            ],
+            "answer": "O",
+            "explanation": "PDF에 따르면, 파일에 대한 읽기, 쓰기, 실행 권한은 다중 사용자 시스템에서 가장 기본적인 보안 기능이라고 설명되어 있다."
+        }
+    },
+    {
+        "page": 1,
+        "유형": "주관식",
+        "question_data": {
+            "question": "파일에 대한 읽기, 쓰기, 실행 권한은 다중 사용자 시스템에서 가장 기본적인 보안 기능인가?",
+            "answer": "예",
+            "explanation": null
+        }
+    },
+    {
+        "page": 2,
+        "유형": "주관식",
+        "question_data": {
+            "question": "Advanced IPC에서 사용되는 객체를 식별하는데 사용되는 번호는 무엇인가?",
+            "answer": "인덱스",
+            "explanation": null
+        }
+    },
+    {
+        "page": 1,
+        "유형": "서술형",
+        "question_data": {
+            "question": "'umask'로 파일을 생성하려는데, 화일 생성 마스크 설정 중 오류가 발생하면 어떤 값을 반환하는가?",
+            "answer": "화일 생성 마스크 설정 중 오류가 발생할 경우, 'umask' 함수는 -1 값을 반환한다.",
+            "explanation": "오류 발생 시 Unix 시스템에서 항상 -1이 반환되는 것은 일반적인 규칙이다."
+        }
+    },
+    {
+        "page": 1,
+        "유형": "서술형",
+        "question_data": {
+            "question": "Advanced IPC에서 사용되는 객체를 식별하는데 사용되는 번호는 무엇인가?",
+            "answer": "Advanced IPC에서 사용되는 객체를 식별하는데 Key ID가 사용된다.",
+            "explanation": "Advanced IPC는 복잡한 프로세스 간 통신을 가능하게 하는 메커니즘이며, 프로세스 간의 공유 자원이나 각종 통신 데이터 적체를 파악하고 식별하기 위해 Key ID를 사용한다."
+        }
+    }
+]

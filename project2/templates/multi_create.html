@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}다중 파일 업로드 및 문제 생성{% endblock %}
+{% block content %}
+<h2 class="mb-4 text-center">다중 파일 업로드 및 문제 생성</h2>
+<form id="multiUploadForm" action="{{ url_for('multi_generate') }}" method="POST" enctype="multipart/form-data" onsubmit="showLoading()">
+  <div id="dropzone" class="dropzone p-4 mb-4 text-center border border-secondary rounded">
+    <h3><i class="fa-solid fa-cloud-upload-alt"></i> 파일 업로드</h3>
+    <p>여러 파일을 선택하거나 드래그 앤 드롭하세요 (PDF, PNG, JPG 등)</p>
+    <input type="file" id="files" name="files" multiple style="display:none;" required>
+  </div>
+  
+  <div class="card mb-4">
+    <div class="card-body">
+      <h4 class="card-title">상세 옵션</h4>
+      <div class="mb-3">
+        <label for="total_questions" class="form-label">문제 수</label>
+        <input type="number" class="form-control" id="total_questions" name="total_questions" value="9" required>
+      </div>
+      <div class="mb-3">
+        <label for="difficulty" class="form-label">난이도</label>
+        <select class="form-select" id="difficulty" name="difficulty">
+          <option value="쉬움">쉬움</option>
+          <option value="보통" selected>보통</option>
+          <option value="어려움">어려움</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">문제 유형 선택</label>
+        <div class="row g-2">
+          {% for qtype in available_types %}
+            <div class="col-6 col-md-3">
+              <input type="checkbox" class="btn-check" id="qtype_{{ loop.index }}" name="question_types" value="{{ qtype }}" checked>
+              <label class="btn btn-outline-primary w-100 py-3" for="qtype_{{ loop.index }}">{{ qtype }}</label>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="text-center">
+    <button type="submit" class="btn btn-primary btn-lg"><i class="fa-solid fa-play"></i> 문제 생성하기</button>
+  </div>
+</form>
+{% endblock %}
+{% block scripts %}
+<script>
+  // 드래그 앤 드롭 이벤트 처리
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('files');
+  dropzone.addEventListener('click', () => fileInput.click());
+  dropzone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropzone.classList.add('dragover');
+  });
+  dropzone.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    dropzone.classList.remove('dragover');
+  });
+  dropzone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropzone.classList.remove('dragover');
+    fileInput.files = e.dataTransfer.files;
+  });
+</script>
+{% endblock %}

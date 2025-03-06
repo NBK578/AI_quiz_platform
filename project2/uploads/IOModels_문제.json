@@ -1,0 +1,107 @@
+[
+    {
+        "page": null,
+        "유형": "객관식",
+        "question_data": {
+            "question": "I/O 모델에 대한 설명으로 옳지 않은 것은 무엇인가요?",
+            "choices": [
+                "A. Blocking I/O",
+                "B. Non-blocking I/O",
+                "C. CPU Multiplexing",
+                "D. Signal Driven I/O Model"
+            ],
+            "answer": "C",
+            "explanation": "문서에 따르면 CPU 다중화는 I/O 모델이 아닙니다. 이는 I/O처리시 CPU의 속도를 고려하는것과 관련이 있습니다."
+        }
+    },
+    {
+        "page": null,
+        "유형": "객관식",
+        "question_data": {
+            "question": "다음중 I/O 작업에 관한 올바른 설명은 무엇일까요?",
+            "choices": [
+                "A. 입력 작업에는 단 한 단계만 존재한다.",
+                "B. 준비된 데이터를 사용자 프로세스로 복사하는 단계가 없다.",
+                "C. 데이터가 준비될 때까지 기다리는 단계와 준비된 데이터를 커널에서 사용자 프로세스로 복사하는 두개의 단계가 있다.",
+                "D. 패킷이 네트워크로부터 도착하는 단계가 없다."
+            ],
+            "answer": "C",
+            "explanation": "I/O 작업은 데이터가 준비되기를 기다리는 단계와 준비된 데이터를 커널에서 사용자 프로세스로 복사하는 두 단계로 나뉘어 집니다."
+        }
+    },
+    {
+        "page": 5,
+        "유형": "빈칸 채우기",
+        "question_data": {
+            "question": "I/O 모델 중에는 Blocking I/O, Non-blocking I/O, I/O multiplexing, Signal Driven I/O Model, ______ 등이 있다.",
+            "choices": [
+                "A. Synchronous I/O",
+                "B. Asynchronous I/O"
+            ],
+            "answer": "B",
+            "explanation": "문서에 따르면, 각종 I/O 모델 중 하나로 'Asynchronous I/O'가 존재합니다."
+        }
+    },
+    {
+        "page": 7,
+        "유형": "빈칸 채우기",
+        "question_data": {
+            "question": "입력 동작에는 '데이터가 준비될 때까지 기다리는 단계'와 ______ 단계가 있다.",
+            "choices": [
+                "A. 준비된 데이터를 커널에서 사용자 프로세스로 복사하는 단계",
+                "B. 준비된 데이터를 사용자 프로세스에서 커널로 전달하는 단계"
+            ],
+            "answer": "A",
+            "explanation": "입력 동작에는 데이터가 준비될 때까지 기다리는 단계와 함께 준비된 데이터를 커널에서 사용자 프로세스로 복사하는 단계가 있습니다."
+        }
+    },
+    {
+        "page": null,
+        "유형": "OX문제",
+        "question_data": {
+            "question": "고속 디스크가 5밀리세컨드의 검색 시간을 갖는다.",
+            "choices": [
+                "O",
+                "X"
+            ],
+            "answer": "O",
+            "explanation": "문서에 따르면, 매우 빠른 디스크의 검색 시간은 5 밀리세컨드입니다."
+        }
+    },
+    {
+        "page": 1,
+        "유형": "주관식",
+        "question_data": {
+            "question": "I/O 모델 중에서 시스템의 요청이 완료될 때까지 기다리는 동안 작업이 데이터의 무결성을 테스트하거나 다른 요청을 시작하고 추적하거나 여러 소켓 연결을 기다리거나 CPU 집중적인 계산을 처리할 수 있는 모델은?",
+            "answer": "Alternatives to I/O Blocking",
+            "explanation": "대안 I/O 블로킹 모델은 시스템 요청이 완료될 때까지 기다리는 동안 데이터의 무결성을 테스트하고, 다른 요청을 시작하고 추적하고, 여러 소켓 연결을 기다리도록 설계되어 있습니다. 이러한 작동 방식 때문에 CPU 집중적인 계산도 처리할 수 있습니다."
+        }
+    },
+    {
+        "page": 1,
+        "유형": "주관식",
+        "question_data": {
+            "question": "I/O Multiplexing 모델에서는 언제 블록이 발생하는가?",
+            "answer": "No data has arrived yet, Internal buffers are full and waiting for transmission and your task requests more data to be sent, accept( ) and connect( ) system calls find no pending connections in the listening queue",
+            "explanation": "I/O Multiplexing 모델에서는 데이터가 아직 도착하지 않았을 때, 내부 버퍼가 가득 차 있고 전송을 기다리는 동안 더 많은 데이터가 전송되도록 작업이 요청되었을 때, accept( ) 및 connect( ) 시스템 호출에서 대기 중인 연결이 없을 때 블록이 발생합니다."
+        }
+    },
+    {
+        "page": "2",
+        "유형": "서술형",
+        "question_data": {
+            "question": "I/O Multiplexing Model의 동작과정에 대해 설명하시오.",
+            "answer": "I/O Multiplexing Model에서는 process가 select를 call하며 이를 통해 여러 소켓 중 하나가 읽을 준비가 될 때까지 대기합니다. 그 상태에서 datagram이 준비되면, 커널에서 사용자로 데이터를 복사하게 됩니다. 그 후, 데이터를 처리하기 위해 process를 block합니다. 데이터가 프로세스에 복사되어 완료되면, 시스템 콜이 OK를 반환하여 프로세스를 다시 실행합니다.",
+            "explanation": "이 모델에서는 여러 소켓을 동시에 추적하면서 어떤 것이 읽을 준비가 되었는지 확인하고 읽기 가능한 소켓이 발견되면 해당 소켓에서 데이터를 읽어 프로세스에 전달하는 것입니다."
+        }
+    },
+    {
+        "page": "7",
+        "유형": "서술형",
+        "question_data": {
+            "question": "다양한 I/O 모델의 비교를 위한 쓰기(write) 작업의 진행에 대해 설명하시오.",
+            "answer": "I/O 모델의 비교는 각 모델이 쓰기(write) 작업을 어떻게 처리하는지를 통해 이루어집니다. blocking 모델에서는 쓰기 작업이 완료되었을 때까지 block 상태가 유지됩니다. nonblocking 모델에서는 쓰기 작업이 완료될 때까지 복수번 쓰기 작업을 요청하며, 이는 polling 방식으로 진행됩니다. I/O multiplexing에서는 타임아웃을 확인하는 작업이 진행되고, 마치면 다음 단계로 넘어가게 됩니다. signal-driven I/O 모델에서는 쓰기 작업이 완료되면 알림을 받습니다. 마지막으로, asynchronous I/O 모델에서는 쓰기 작업을 시작한 뒤에 다른 작업을 수행하며, 쓰기 작업이 완료되었을 때 알림을 받습니다.",
+            "explanation": "이는 각 I/O 모델이 쓰기 작업을 다루는 고유한 방식을 보여주고 있으며, 각 방식의 특성에 따라 특정 상황에서 더 효율적일 수 있습니다."
+        }
+    }
+]

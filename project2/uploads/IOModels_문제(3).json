@@ -1,0 +1,103 @@
+[
+    {
+        "page": 10,
+        "유형": "객관식",
+        "question_data": {
+            "question": "다음 중 I/O 모델들에 속하지 않는 것은 무엇인가?",
+            "choices": [
+                "A. Blocking I/O",
+                "B. Non-blocking I/O",
+                "C. Parallel I/O",
+                "D. Asynchronous I/O"
+            ],
+            "answer": "C",
+            "explanation": "본 PDF에 따르면, I/O 모델들로 Blocking I/O, Non-blocking I/O, Signal Driven I/O Model, Asynchronous I/O가 존재하지만 Parallel I/O는 존재하지 않는다."
+        }
+    },
+    {
+        "page": 10,
+        "유형": "객관식",
+        "question_data": {
+            "question": "I/O 멀티플렉싱 모델에서 프로세스가 차단되는 시점은 언제인가?",
+            "choices": [
+                "A. 데이터 복사가 완료되었을 때",
+                "B. 데이터그램이 준비되었을 때",
+                "C. 커널로부터 사용자에게 데이터 복사 중일 때",
+                "D. 시스템 호출이 OK를 반환했을 때"
+            ],
+            "answer": "C",
+            "explanation": "I/O 멀티플렉싱 모델에서 사용자 버퍼로 데이터 복사 중에 프로세스가 차단된다."
+        }
+    },
+    {
+        "page": 3,
+        "유형": "빈칸 채우기",
+        "question_data": {
+            "question": "블록이 필요한 경우는 _, _, _ . 세 가지를 채우시오.",
+            "answer": "Reading, Writing, Connecting",
+            "explanation": "PDF 내용 중 'When to Block ?'의 내용을 바탕으로 작성된 문제입니다. Reading의 경우로는 아직 데이터가 도착하지 않았을 때, Writing의 경우로는 내부 버퍼가 가득 찼고 전송을 기다리고 있는 상황에서 작업이 더 많은 데이터를 보내도록 요청했을 때, Connecting의 경우로는 accept() 및 connect() 시스템 호출이 대기 중인 연결을 찾지 못했을 때 블록이 필요하다."
+        }
+    },
+    {
+        "page": 6,
+        "유형": "빈칸 채우기",
+        "question_data": {
+            "question": "I/O Models에는 _____ I/O, Non-blocking I/O,  I/O multiplexing, Signal Driven I/O Model, Asynchronous I/O가 있다. 비어 있는 공간에 해당하는 단어를 채우시오.",
+            "answer": "Blocking",
+            "explanation": "PDF 내용 중 'I/O Models' 내용을 바탕으로 작성된 문제입니다. I/O Models에는 분명히 5가지가 제시되어 있는데, 그 중 첫 사례인 블로킹(I/O Blocking)에 해당하는 단어를 찾으라는 질문입니다."
+        }
+    },
+    {
+        "page": 10,
+        "유형": "OX문제",
+        "question_data": {
+            "question": "I/O blocking 은 CPU가 디스크 또는 네트워크보다 작동 속도가 빠르기 때문에 존재한다.",
+            "choices": [
+                "O",
+                "X"
+            ],
+            "answer": "O",
+            "explanation": "I/O blocking은 CPU가 디스크 또는 네트워크보다 훨씬 빠르게 작동하기 때문에 필요하다."
+        }
+    },
+    {
+        "page": 6,
+        "유형": "OX문제",
+        "question_data": {
+            "question": "시스템 요청이 완료되기를 기다리는 동안, 작업은 데이터의 무결성을 검사하거나, CPU 집중 계산을 처리하는 등의 작업을 수행할 수 있다.",
+            "choices": [
+                "O",
+                "X"
+            ],
+            "answer": "O",
+            "explanation": "시스템 요청이 완료될 때까지 CPU 작업을 수행하거나, 다른 요청을 시작하고 추적하거나, 여러 소켓 연결을 기다리거나, CPU 집중적인 계산을 처리하는 등의 작업을 수행할 수 있다."
+        }
+    },
+    {
+        "page": 10,
+        "유형": "주관식",
+        "question_data": {
+            "question": "I/O Models에는 어떤 종류들이 있는가?",
+            "answer": "Blocking I/O, Non-blocking I/O, I/O multiplexing, Signal Driven I/O Model, Asynchronous I/O",
+            "explanation": "I/O Models에는 Blocking I/O, Non-blocking I/O, I/O multiplexing, Signal Driven I/O Model, Asynchronous I/O 등 다양한 형태가 있다."
+        }
+    },
+    {
+        "page": 11,
+        "유형": "주관식",
+        "question_data": {
+            "question": "입력 동작에는 어떤 단계들이 존재하는가?",
+            "answer": "데이터가 준비될 때까지 기다리는 단계, 준비된 데이터를 커널에서 사용자 프로세스로 복사하는 단계",
+            "explanation": "입력 동작에는 데이터가 준비되기를 기다리는 단계와 준비된 데이터를 커널에서 사용자 프로세스로 복사하는 두 가지의 단계가 있다."
+        }
+    },
+    {
+        "page": null,
+        "유형": "서술형",
+        "question_data": {
+            "question": "I/O Models에 대해 설명하시오.",
+            "answer": "I/O 모델은 기본적으로 Blocking I/O, Non-blocking I/O, I/O Multiplexing, Signal Driven I/O Model, Asynchronous I/O 다섯 가지가 있다. Blocking I/O는 데이터를 주거나 받을 때 해당 과정이 완료될 때까지 프로세스가 대기하는 모델이다. 반면, Non-blocking I/O는 데이터를 주거나 받을 때 해당 과정이 완료되지 않아도 프로세스가 계속 진행할 수 있는 모델이다. I/O multiplexing은 여러 I/O 채널을 하나의 채널로 병합하여 사용하는 것으로, OS의 효율적인 리소스 관리를 돕는다. Signal Driven I/O Model은 데이터가 준비되었을 때 시그널을 받아 데이터를 처리하는 모델이다. Asynchronous I/O는 데이터를 주거나 받는 요청을 했을 때 즉시 반환하고, 데이터가 준비되었을 때만 처리하는 모델이다.",
+            "explanation": null
+        }
+    }
+]

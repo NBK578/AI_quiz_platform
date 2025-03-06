@@ -1,0 +1,103 @@
+[
+    {
+        "page": null,
+        "유형": "객관식",
+        "question_data": {
+            "question": "아래 중 UNIX 시스템에서 파일 접근을 보호하는 메커니즘은 무엇인가?",
+            "choices": [
+                "A. I/O Multiplexing",
+                "B. Signal Driven I/O Model",
+                "C. UNIX 사용 권한(permission)",
+                "D. Advanced IPC"
+            ],
+            "answer": "C",
+            "explanation": "UNIX 시스템에서 파일의 접근 권한이다른 사람에게 피해가 되지 않도록 보호하는 메커니즘은 UNIX 사용 권한(permission)이다."
+        }
+    },
+    {
+        "page": null,
+        "유형": "객관식",
+        "question_data": {
+            "question": "I/O 모델 중에 사용자 신호를 기다려야하는 모델은?",
+            "choices": [
+                "A. Blocking I/O",
+                "B. Non-blocking I/O",
+                "C. I/O multiplexing",
+                "D. Signal Driven I/O Model"
+            ],
+            "answer": "D",
+            "explanation": "Signal Driven I/O Model은 신호를 기다리는 I/O 모델이다."
+        }
+    },
+    {
+        "page": 1,
+        "유형": "빈칸 채우기",
+        "question_data": {
+            "question": "I/O 모델 중에는 Blocking I/O, Non-blocking I/O, I/O multiplexing, Signal Driven I/O Model, ______ 등이 있다.",
+            "answer": "Asynchronous I/O",
+            "explanation": null
+        }
+    },
+    {
+        "page": 1,
+        "유형": "빈칸 채우기",
+        "question_data": {
+            "question": "입력 동작에는 '데이터가 준비될 때까지 기다리는 단계'와 ______ 단계가 있다.",
+            "answer": "작업이 처리되는 단계",
+            "explanation": null
+        }
+    },
+    {
+        "page": 1,
+        "유형": "OX문제",
+        "question_data": {
+            "question": "I/O 모델에는 Blocking I/O, Non-blocking I/O, I/O multiplexing, Signal Driven I/O Model 등이 포함된다.",
+            "choices": [
+                "O",
+                "X"
+            ],
+            "answer": "O",
+            "explanation": "I/O 모델에는 다양한 종류가 있으며, 이 중에는 Blocking I/O, Non-blocking I/O, I/O multiplexing, Signal Driven I/O Model 등이 있다."
+        }
+    },
+    {
+        "page": 3,
+        "유형": "OX문제",
+        "question_data": {
+            "question": "UNIX 시스템은 단일 유저 시스템이다.",
+            "choices": [
+                "O",
+                "X"
+            ],
+            "answer": "X",
+            "explanation": "UNIX 시스템은 다중 유저 시스템이다. 다수의 사용자가 동시에 사용할 수 있다."
+        }
+    },
+    {
+        "page": null,
+        "유형": "주관식",
+        "question_data": {
+            "question": "I/O 모델 중에서 시스템의 요청이 완료될 때까지 기다리는 동안 작업이 데이터의 무결성을 테스트하거나 다른 요청을 시작하고 추적하거나 여러 소켓 연결을 기다리거나 CPU 집중적인 계산을 처리할 수 있는 모델은 무엇인가요?",
+            "answer": "I/O Multiplexing",
+            "explanation": null
+        }
+    },
+    {
+        "page": null,
+        "유형": "주관식",
+        "question_data": {
+            "question": "UNIX 시스템에서 사용권한(permission) 하의 실행 권한에서 디렉토리의 경우 어떤 명령으로 해당 디렉토리로 이동 가능한가요?",
+            "answer": "cd",
+            "explanation": null
+        }
+    },
+    {
+        "page": null,
+        "유형": "서술형",
+        "question_data": {
+            "question": "다양한 I/O 모델들의 특징과 그 중에서 I/O Multiplexing Model의 본질적인 동작 원리에 대해 서술하시오.",
+            "answer": "I/O 모델에는 Blocking I/O, Non-blocking I/O, I/O multiplexing, Signal Driven I/O Model 등이 있다. I/O Multiplexing 모델에서는, 블록이 발생하는 이벤트에 의해 처리된다. 이 모델은 여러 I/O 이벤트를 한꺼번에 처리할 수 있는 능력을 가지고 있다. 이는 다른 요청을 시작하고 추적하거나 여러 소켓 연결을 기다리거나 CPU 집중적인 계산을 처리할 수 있게 해주며, 이를 통해 시스템의 효율성을 증가시킨다.",
+            "explanation": ""
+        }
+    }
+]

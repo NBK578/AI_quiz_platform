@@ -1,0 +1,86 @@
+[
+    {
+        "원본": "[{\"page\": 1, \"유형\": \"객관식\", \"question_data\": {\"question\": \"Linux에서 블록\t크기는 어떤 크기와 같은가?\", \"choices\": [\"A. 페이지 프레임의 크기 (4K, 8K)\", \"B. 인덱스 블록의 크기 (8K, 16K)\", \"C. 디스크 블록의 크기 (2K, 4K)\", \"D. 파일 블록의 크기 (1K, 2K)\"], \"answer\": \"A\", \"explanation\": \"디스크 블록의 크기는 보통 페이지 프레임의 크기와 같다. (4K, 8K)\"}},\n{\"page\": 2, \"유형\": \"객관식\", \"question_data\": {\"question\": \"inode 에서 실제 data block을 가리키는 포인터들로 구성된 indirect block 은 무엇인가?\", \"choices\": [\"A. single indirect block\", \"B. double indirect block\", \"C. triple indirect block\", \"D. quadruple indirect block\"], \"answer\": \"C\", \"explanation\": \"inode에서 실제 data block을 가리키는 포인터들로 구성된 indirect block은 triple indirect block이다.\"}}]",
+        "유형": "객관식",
+        "page": null
+    },
+    {
+        "page": 1,
+        "유형": "빈칸 채우기",
+        "question_data": {
+            "question": "inode에서 어떤 것을 관리하는지 설명하시오.",
+            "choices": [
+                "A. 디스크 블록",
+                "B. 사용자 정보",
+                "C. 파일 계층 구조",
+                "D. 파일 접근 제어"
+            ],
+            "answer": "A",
+            "explanation": "inode는 디스크 블록을 관리한다."
+        }
+    },
+    {
+        "page": 1,
+        "유형": "빈칸 채우기",
+        "question_data": {
+            "question": "블록 번호를 Sector Address로 변환하는 작업은 어디에서 수행하는지 설명하시오.",
+            "choices": [
+                "A. 사용자 애플리케이션에서",
+                "B. 컨트롤러나 디스크 드라이버에서",
+                "C. 파일 시스템에서",
+                "D. 인덱스 블록에서"
+            ],
+            "answer": "B",
+            "explanation": "블록 번호를 Sector Address로 변환하는 작업은 컨트롤러나 디스크 드라이버에서 수행한다."
+        }
+    },
+    {
+        "page": 21,
+        "유형": "OX문제",
+        "question_data": {
+            "question": "inode에서 디스크 블록 관리는 direct blocks 방식으로 data block을 가리키는 것이 포함되어 있다.",
+            "choices": [
+                "O",
+                "X"
+            ],
+            "answer": "O",
+            "explanation": "inode에서 디스크 블록 관리는 direct blocks 방식으로 data block을 가리키는 것이 포함되어 있다."
+        }
+    },
+    {
+        "page": 2,
+        "유형": "주관식",
+        "question_data": {
+            "question": "inode에서 디스크 블록을 관리하기 위해 어떤 블록들이 사용되는가?",
+            "answer": "direct blocks, indirect blocks, double indirect block, triple indirect block",
+            "explanation": "위의 블록들은 모두 inode에서 디스크 블록을 관리하는데 사용됩니다. direct blocks는 실제 data block을 가리키며, indirect blocks는 index block을 가리킵니다. 이때 single indirect block은 index block이 실제 data block을 가리키는 포인터로 구성되어 있습니다. double indirect block은 two layer로 이루어져 있으며, 첫번째 층은 다른 index block을, 두번째 층은 실제 data block을 가리키는 포인터로 구성되어 있습니다. 마지막으로 triple indirect block은 three layer로 이루어져 있으며, 첫번째와 두번째 층은 다른 index block을, 세번째 층은 실제 data block을 가리키는 포인터로 구성되어 있습니다."
+        }
+    },
+    {
+        "page": 3,
+        "유형": "주관식",
+        "question_data": {
+            "question": "Linux에서 파일을 관리하기 위해 사용하는 객체는 무엇인가?",
+            "answer": "inode",
+            "explanation": "Linux에서는 inode(index node)를 사용하여 파일을 관리합니다. 파일이 새로 생성되면 inode가 만들어지며, internal representation of a file인 inode는 파일의 모든 정보를 관리합니다. 이에는 파일에 속한 블록 위치, 파일 소유자 및 접근 권한, 파일 시간 정보, 파일 유형 등이 포함됩니다."
+        }
+    },
+    {
+        "page": 2,
+        "유형": "서술형",
+        "question_data": {
+            "question": "디스크 관리에서 사용되는 inode에 대해 서술하시오.",
+            "answer": "inode는 index node의 약자로, Linux 등에서 파일을 관리하기 위한 객체입니다. 파일이 새로 생성될 때마다 inode가 생성되며, 이는 파일의 내부 표현을 담당합니다. inode는 파일에 속한 블록 위치, 파일의 소유자 및 접근 권한, 파일 시간 정보 이외에도 파일의 유형 정보를 담고 있습니다. 이를 통해 커널은 정규 파일 뿐 아니라 디렉토리, 디바이스, 파이프, 소켓 등도 '파일'이라는 추상화 객체로 관리할 수 있습니다. 또한 inode는 디스크 상에 정적으로 존재합니다.",
+            "explanation": ""
+        }
+    },
+    {
+        "page": 5,
+        "유형": "서술형",
+        "question_data": {
+            "question": "버퍼 캐시의 역할과 작동 방식에 대해 설명하시오.",
+            "answer": "버퍼 캐시는 디스크의 입출력 성능을 향상시키기 위해 사용자 어플리케이션과 물리적 디스크 사이에서 데이터를 임시적으로 저장하는 역할을 합니다. 사용자 어플리케이션이 파일 입출력을 요청하면, 버퍼 캐시는 요청된 파일이 있는 디스크 블록을 확인하고, 해당 디스크 블록이 캐시에 이미 존재하는지 확인합니다. 만약 해당 디스크 블록이 캐시에 존재하지 않으면 캐시로 가져와 캐시 내 버퍼 풀에 저장하게 됩니다. 이렇게 함으로써 디스크로의 물리적인 입출력 요청을 줄이고 성능을 향상시킬 수 있습니다.",
+            "explanation": ""
+        }
+    }
+]

@@ -1,0 +1,103 @@
+[
+    {
+        "page": 39,
+        "유형": "객관식",
+        "question_data": {
+            "question": "Buffer cache에 따른 I/O 과정에서 첫번째 단계는 무엇인가?",
+            "choices": [
+                "A. 요청된 파일에 해당하는 디스크 블록 확인",
+                "B. file I/O 요청",
+                "C. 해당 디스크 블록이 버퍼 캐시에 존재하는지 확인",
+                "D. 존재하지 않는 디스크 블록을 버퍼로 가져오기"
+            ],
+            "answer": "B",
+            "explanation": "Buffer cache에 따른 I/O 과정은 첫 분째로 file I/O 요청이다."
+        }
+    },
+    {
+        "page": 44,
+        "유형": "객관식",
+        "question_data": {
+            "question": "'creat' system call은 어떤 값을 반환하나요?",
+            "choices": [
+                "A. 성공 시: 파일 설명자(>= 0), 실패 시: -1",
+                "B. 성공 시: 0, 실패 시: -1",
+                "C. 성공 시: 파일 경로",
+                "D. 실패 시만 값을 반환, 성공 시: 반환값 없음"
+            ],
+            "answer": "A",
+            "explanation": "'creat' system call은 성공 시 파일 설명자를 반환하고, 실패 시 -1을 반환한다."
+        }
+    },
+    {
+        "page": 1,
+        "유형": "빈칸 채우기",
+        "question_data": {
+            "question": "'open()' 시스템 콜에서 성공적으로 파일을 열면 반환되는 데이터는 ______ 이다.",
+            "answer": "파일 디스크립터(>=0)",
+            "explanation": "성공 시 파일 디스크립터(0 이상의 정수)를 반환하며, 실패 시 -1을 반환합니다."
+        }
+    },
+    {
+        "page": 1,
+        "유형": "빈칸 채우기",
+        "question_data": {
+            "question": "작성된 파일에 권한을 부여하기 위해 사용하는 시스템 콜은 _____이다.",
+            "answer": "creat()",
+            "explanation": "creat() 시스템 콜은 파일을 생성하고 파일의 권한을 설정하는 역할을 합니다."
+        }
+    },
+    {
+        "page": null,
+        "유형": "OX문제",
+        "question_data": {
+            "question": "open()과 close() 시스템 콜에서 성공적인 동작 후 반환값이 같은가?",
+            "choices": [
+                "O",
+                "X"
+            ],
+            "answer": "X",
+            "explanation": "open() 시스템 콜의 성공시 반환값은 파일 디스크립터(>= 0)이고, close() 시스템 콜의 성공시 반환값은 0이다."
+        }
+    },
+    {
+        "page": null,
+        "유형": "OX문제",
+        "question_data": {
+            "question": "프로그램의 수행이 끝나면 모든 개방된 파일은 자동적으로 close되는가?",
+            "choices": [
+                "O",
+                "X"
+            ],
+            "answer": "O",
+            "explanation": "프로그램이 종료될 때, 운영체제는 모든 개방된 파일을 자동적으로 종료한다."
+        }
+    },
+    {
+        "page": 1,
+        "유형": "주관식",
+        "question_data": {
+            "question": "트리플 인다이렉트 블록에서 첫 번째/두 번째 층의 인덱스 블록은 무엇을 가리키는 포인터들로 구성되어 있나요?",
+            "answer": "다른 인덱스 블록",
+            "explanation": "트리플 인다이렉트 블록에서 첫 번째/두 번째 층의 인덱스 블록은 다른 인덱스 블록을 가리키는 포인터들로 구성되어 있습니다."
+        }
+    },
+    {
+        "page": 1,
+        "유형": "주관식",
+        "question_data": {
+            "question": "디스크는 어떤 구조의 집합으로 볼 수 있나요?",
+            "answer": "디스크 블록",
+            "explanation": "디스크는 디스크 블록들의 집합으로 봅니다."
+        }
+    },
+    {
+        "page": 4,
+        "유형": "서술형",
+        "question_data": {
+            "question": "inode에서 디스크 블록 관리 방법을 알려주세요.",
+            "answer": "inode에서 디스크 블록 관리는 direct blocks와 indirect blocks 두 가지로 수행된다. direct blocks는 data block을 가리키며, indirect blocks는 single indirect block, double indirect block, triple indirect block 세 종류로 설명할 수 있다. single indirect block은 index block을 가리키며 이 index block은 실제 data block을 가리키는 포인터들로 구성되어 있다. double indirect block은 index block이 두 층으로 구성되어 있으며, 첫 번째 층의 index block은 다른 index block을 가리키고 두 번째 층의 index block은 실제 data block을 가리키는 포인터들로 구성되어 있다. 마지막으로 triple indirect block은 index block이 세 층으로 구성되어 있으며, 첫 번째와 두 번째 층의 index block은 다른 index block을 가리키고 세 번째 층의 index block은 실제 data block을 가리키는 포인터로 구성되어 있다.",
+            "explanation": ""
+        }
+    }
+]

@@ -1,0 +1,113 @@
+[
+    {
+        "page": 10,
+        "유형": "객관식",
+        "question_data": {
+            "question": "조용한 입출력 모델 IO 중 어떤 것이 사용자 프로세스로 데이터를 복사하는 동안 프로세스를 차단 하는가?",
+            "choices": [
+                "A. Blocking I/O",
+                "B. Non-blocking I/O",
+                "C. Signal Driven I/O Model",
+                "D. Asynchronous I/O"
+            ],
+            "answer": "A",
+            "explanation": "Blocking I/O 모델은 사용자 프로세스로 데이터를 복사하는 동안 프로세스를 차단한다."
+        }
+    },
+    {
+        "page": 12,
+        "유형": "객관식",
+        "question_data": {
+            "question": "어떤 I/O Model이 프로세스를 특정 신호 처리기가 수립 될 때 까지 데이터가 도착할 때까지 기다린 뒤 데이터를 커널에서 사용자로 복사하는 역할을 수행 하는가?",
+            "choices": [
+                "A. Blocking I/O",
+                "B. Non-blocking I/O",
+                "C. Signal Driven I/O Model",
+                "D. Asynchronous I/O"
+            ],
+            "answer": "C",
+            "explanation": "Signal Driven I/O Model는 특정 신호 처리기가 수립 될 때 까지 데이터가 도착할 때까지 기다린 뒤, 데이터를 커널에서 사용자로 복사하는 역할을 수행한다."
+        }
+    },
+    {
+        "page": 12,
+        "유형": "빈칸 채우기",
+        "question_data": {
+            "question": "입력 동작에는 몇 단계가 존재하는가?",
+            "choices": [
+                "A. 3단계",
+                "B. 2단계",
+                "C. 4단계",
+                "D. 1단계"
+            ],
+            "answer": "B",
+            "explanation": "입력 동작에는 '데이터가 준비될 때까지 기다리는 단계'와 '준비된 데이터를 커널에서 사용자 프로세스로 복사하는 단계'로 총 2단계가 존재한다."
+        }
+    },
+    {
+        "page": 6,
+        "유형": "빈칸 채우기",
+        "question_data": {
+            "question": "날아 들어온 패킷이 네트워크에서 어디로 복사되는가?",
+            "choices": [
+                "A. 사용자 프로세스로",
+                "B. 커널 버퍼로"
+            ],
+            "answer": "B",
+            "explanation": "패킷이 네트워크로부터 도착했을 때, 이는 커널 버퍼로 복사된다."
+        }
+    },
+    {
+        "page": 10,
+        "유형": "OX문제",
+        "question_data": {
+            "question": "CPU는 디스크나 네트워크보다 작동 속도가 더 느리다.",
+            "choices": [
+                "O",
+                "X"
+            ],
+            "answer": "X",
+            "explanation": "CPU는 디스크나 네트워크보다 작동 속도가 더 빠릅니다."
+        }
+    },
+    {
+        "page": 12,
+        "유형": "OX문제",
+        "question_data": {
+            "question": "I/O 모델은 블록킹 I/O, 비블록킹 I/O, I/O 다중화, 시그널 중심 I/O 모델, 비동기 I/O 5가지로 나눌 수 있다.",
+            "choices": [
+                "O",
+                "X"
+            ],
+            "answer": "O",
+            "explanation": "PDF에 따르면, I/O 모델은 블록킹 I/O, 비블록킹 I/O, I/O 다중화, 시그널 중심 I/O 모델, 비동기 I/O를 포함하고 있습니다."
+        }
+    },
+    {
+        "page": 10,
+        "유형": "주관식",
+        "question_data": {
+            "question": "네트워크 소켓의 경우, 어떤 두 단계가 존재합니까?",
+            "answer": "패킷이 네트워크로부터 도착, 커널 버퍼로 복사되는 단계와 커널 버퍼로부터 응용 프로그램의 버퍼로 복사하는 단계",
+            "explanation": "네트워크 소켓의 경우, 패킷이 네트워크로부터 도착하여 커널 버퍼로 복사되는 단계와 이 데이터를 커널 버퍼로부터 응용 프로그램의 버퍼로 복사하는 두 단계가 있습니다."
+        }
+    },
+    {
+        "page": 12,
+        "유형": "주관식",
+        "question_data": {
+            "question": "비동기 I/O 모델에서 데이터가 준비되면 어떤 신호가 전송되는지?",
+            "answer": "aio_read에서 지정된 신호",
+            "explanation": "비동기 I/O 모델에서는 데이터가 준비되면 aio_read에서 사전에 지정된 신호가 전송됩니다."
+        }
+    },
+    {
+        "page": 10,
+        "유형": "서술형",
+        "question_data": {
+            "question": "다양한 I/O 모델들에 대해 설명하시오.",
+            "answer": "I/O 모델에는 Blocking I/O, Non-blocking I/O, I/O multiplexing, Signal Driven I/O Model, Asynchronous I/O 등이 포함됩니다. Blocking I/O 모델에서는 데이터가 준비될 때까지 프로세스가 block 상태로 변경됩니다. Non-blocking I/O 모델에서는 데이터가 준비될 때까지 프로세스가 반복적으로 호출되어 데이터가 준비될 때까지 대기하는 방식입니다. I/O multiplexing 모델에서는 여러 소켓이 준비됨을 기다리는 동안 프로세스가 block 상태로 변경됩니다. Signal Driven I/O Model에서는 데이터가 준비되면 SIGIO 신호 처리기가 설정되며, 데이터가 준비될 때까지 프로세스가 계속 실행됩니다. 마지막으로 Asynchronous I/O 모델에서는 데이터가 준비될 때까지 프로세스가 계속 실행되며 준비된 데이터가 커널로부터 사용자 프로세스로 복사됩니다.",
+            "explanation": "I/O 모델은 데이터를 어떻게 처리하고, 데이터가 서버로 전송되었을 때 그 데이터를 어떻게 다루는지를 정의하는 프로그래밍 패턴입니다. 이는 서버의 성능과 효율성을 크게 좌우하며, 각기 다른 상황과 요구사항에 따라 적절한 모델을 선택하는 것이 중요합니다."
+        }
+    }
+]

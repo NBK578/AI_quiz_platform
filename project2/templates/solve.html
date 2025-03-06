@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}문제 풀이 ({{ progress }}){% endblock %}
+{% block content %}
+<div class="container">
+  <h2 class="mb-4 text-center">문제 풀이</h2>
+  <div class="text-center mb-3">
+    <span class="badge bg-info fs-5">{{ progress }}</span>
+  </div>
+  <div class="card mb-4 shadow-sm">
+    <div class="card-body">
+      <h5 class="card-title">문제 ({{ question.get('유형', '문제') }})</h5>
+      {% set qd = question.get('question_data', {}) %}
+      <p class="card-text">
+        <strong>문제:</strong> {{ qd.question|trim if qd.question|trim else "문제가 생성되지 않았습니다." }}
+      </p>
+      {% if question.get('유형') == '빈칸 채우기' %}
+        <div class="mb-3">
+          <label for="answer" class="form-label">답안 입력:</label>
+          <input type="text" class="form-control" id="answer" name="answer" required>
+        </div>
+      {% elif qd.choices %}
+        <div class="mb-3">
+          <label class="form-label">보기:</label>
+          {% for choice in qd.choices %}
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="answer" id="answer_{{ loop.index }}" value="{{ choice }}">
+              <label class="form-check-label" for="answer_{{ loop.index }}">{{ choice }}</label>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="mb-3">
+          <label for="answer" class="form-label">답안 입력:</label>
+          <input type="text" class="form-control" id="answer" name="answer" required>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+  <div class="text-center">
+    <form action="{{ url_for('solve', q=q_index) }}" method="POST" onsubmit="showLoading()">
+      <button type="submit" class="btn btn-primary btn-lg"><i class="fa-solid fa-arrow-right"></i> 다음 문제</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

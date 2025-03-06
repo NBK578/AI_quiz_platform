@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}문제 생성 중...{% endblock %}
+{% block head %}
+{{ super() }}
+<style>
+  .loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 80vh;
+  }
+  .progress-bar {
+    width: 80%;
+    background-color: #e9ecef;
+    border-radius: 0.25rem;
+    overflow: hidden;
+    margin-top: 1rem;
+  }
+  .progress-bar-fill {
+    height: 1.5rem;
+    width: 0;
+    background-color: #0d6efd;
+    animation: progress-animation 3s infinite;
+  }
+  @keyframes progress-animation {
+    0% { width: 0%; }
+    50% { width: 100%; }
+    100% { width: 0%; }
+  }
+  .loading-text {
+    font-size: 1.5rem;
+    margin-top: 1rem;
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse {
+    0% { opacity: 0.5; }
+    50% { opacity: 1; }
+    100% { opacity: 0.5; }
+  }
+</style>
+{% endblock %}
+{% block content %}
+<div class="loading-container">
+  <h2>문제를 생성하는 중입니다...</h2>
+  <div class="progress-bar">
+    <div class="progress-bar-fill"></div>
+  </div>
+  <div class="loading-text">잠시만 기다려 주세요</div>
+</div>
+{% endblock %}

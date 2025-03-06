@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}메인 페이지{% endblock %}
+{% block content %}
+<div class="p-5 mb-4 bg-light rounded-3">
+  <div class="container-fluid py-5">
+    <h1 class="display-5 fw-bold">문제를 자동 생성해드립니다!</h1>
+    <p class="col-md-8 fs-4">PDF 또는 이미지를 업로드하여 AI가 자동으로 문제를 생성합니다. 간편하고 빠르게 사용해 보세요.</p>
+    <a class="btn btn-primary btn-lg" href="{{ url_for('create') }}" role="button">문제 생성하기</a>
+  </div>
+</div>
+{% endblock %}
