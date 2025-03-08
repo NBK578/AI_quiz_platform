@@ -31,7 +31,8 @@ app.register_blueprint(google_bp, url_prefix="/login")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
 # OpenAI API 및 Tesseract 경로 설정
-openai.api_key = "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"
+openai.api_key = #공개 설정으로 인한 비활성화
+
 pytesseract.pytesseract.tesseract_cmd = r"C:\Users\USER\Desktop\2024\tesseract.exe"
 
 # 파일 업로드 관련 설정
