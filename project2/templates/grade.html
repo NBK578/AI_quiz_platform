@@ -1,57 +1,74 @@
 {% extends "base.html" %}
-{% block title %}채점 및 피드백{% endblock %}
+{% block title %}채점 결과{% endblock %}
+
 {% block content %}
-<h2 class="mb-4 text-center">채점 및 피드백</h2>
-{% if grading_results %}
-  {% for result in grading_results %}
-    <div class="card mb-4 shadow-sm">
-      <div class="card-body">
-        <h5 class="card-title">문제 {{ loop.index }}</h5>
-        <p class="card-text"><strong>문제:</strong> {{ result.question }}</p>
-        <hr>
-        <p class="mb-1"><strong>당신의 답안:</strong> <span class="text-info">{{ result.your_answer }}</span></p>
-        <p class="mb-1"><strong>채점 결과:</strong> <span class="{% if result.result == '정답' %}text-success{% else %}text-danger{% endif %}">{{ result.result }}</span></p>
-        <p class="mb-1"><strong>피드백:</strong> {{ result.feedback }}</p>
-        <p class="mb-0"><strong>점수:</strong> <span class="fw-bold">{{ result.score }}</span></p>
-      </div>
-    </div>
-  {% endfor %}
-  <div class="text-center">
-    <a href="{{ url_for('results') }}" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> 뒤로가기</a>
-  </div>
-{% else %}
-  <form action="{{ url_for('grade') }}" method="POST" onsubmit="showLoading()">
-    {% for q in questions %}
-      {% set q_index = loop.index0 %}
-      <div class="card mb-4 shadow-sm">
-        <div class="card-body">
-          <h5 class="card-title">문제 {{ loop.index }} ({{ q.get('유형', '문제') }})</h5>
-          {% set qd = q.get('question_data', {}) %}
-          <p class="card-text">
-            {{ qd.question|trim if qd.question|trim else "문제가 생성되지 않았습니다." }}
-          </p>
-          {% if qd.choices %}
-            <div class="mb-3">
-              <label class="form-label">보기:</label>
-              {% for choice in qd.choices %}
-                <div class="form-check">
-                  <input class="form-check-input" type="radio" name="answer_{{ q_index }}" id="answer_{{ q_index }}_{{ loop.index }}" value="{{ choice }}">
-                  <label class="form-check-label" for="answer_{{ q_index }}_{{ loop.index }}">{{ choice }}</label>
+<div class="result-container">
+  <h2 class="text-center mb-4 fw-bold">📊 채점 결과</h2>
+
+  {% if grading_results %}
+    <div class="table-responsive shadow rounded">
+      <table class="table table-hover table-bordered align-middle mb-0">
+        <thead class="table-dark text-center">
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">문제</th>
+            <th scope="col">당신의 답안</th>
+            <th scope="col">피드백</th>
+            <th scope="col">점수</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in grading_results %}
+            <tr>
+              <th scope="row" class="text-center align-middle bg-light">
+                <div class="position-relative d-inline-block" style="width: 40px; height: 40px;">
+                  {% if r.is_correct %}
+                    <img src="{{ url_for('static', filename='img/correct.png') }}"
+                         alt="정답"
+                         class="w-100 h-100 rounded-circle border border-success">
+                  {% else %}
+                    <img src="{{ url_for('static', filename='img/wrong.png') }}"
+                         alt="오답"
+                         class="w-100 h-100 rounded-circle border border-danger">
+                  {% endif %}
+                  <span class="position-absolute top-50 start-50 translate-middle text-dark fw-bold" style="font-size: 14px; text-shadow: 1px 1px 2px white;">
+                    {{ loop.index }}
+                  </span>
                 </div>
-              {% endfor %}
-            </div>
-          {% else %}
-            <div class="mb-3">
-              <label for="answer_{{ q_index }}" class="form-label">답안 입력:</label>
-              <input type="text" class="form-control" id="answer_{{ q_index }}" name="answer_{{ q_index }}" required>
-            </div>
-          {% endif %}
-        </div>
-      </div>
-    {% endfor %}
-    <div class="text-center">
-      <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> 채점하기</button>
+              </th>
+              <td>{{ r.question_data.question }}</td>
+              <td>{{ r.user_ans or '미응답' }}</td>
+              <td>{{ r.feedback or '-' }}</td>
+              <td class="text-center fw-semibold">{{ r.score }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
-  </form>
-{% endif %}
+  {% else %}
+    <div class="alert alert-info text-center mt-5">채점된 결과가 없습니다.</div>
+  {% endif %}
+
+  <div class="text-center mt-4">
+    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary me-2 px-4">🏠 메인으로</a>
+    <a href="{{ url_for('solve') }}" class="btn btn-primary px-4">🔁 다시 풀기</a>
+  </div>
+</div>
+
+<style>
+  .result-container {
+    max-width: 1100px;
+    padding: 2rem;
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  table td, table th {
+    vertical-align: middle !important;
+  }
+</style>
 {% endblock %}

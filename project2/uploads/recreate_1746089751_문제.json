@@ -1,0 +1,104 @@
+[
+    {
+        "page": 1,
+        "유형": "객관식",
+        "question_data": {
+            "question": "라즈베리파이에서 실행 도중 사용자가 Ctrl + C 키를 입력하여 프로그램을 종료시킬 경우, 어떤 함수가 실행되지 못하고 종료되는지? ",
+            "choices": [
+                "A. GPIO.clear()",
+                "B. GPIO.cleanup()",
+                "C. GPIO.delete()",
+                "D. GPIO.close()"
+            ],
+            "answer": "B",
+            "explanation": "사용자가 프로그램을 종료시킬 경우, GPIO.cleanup()이 실행되지 못하고 종료된다."
+        }
+    },
+    {
+        "page": null,
+        "유형": "빈칸 채우기",
+        "question_data": {
+            "question": "라즈베리파이의 GPIO 핀에서 '디지털 값 1'이 나타내는 전압은 ______이다.",
+            "answer": "3.3v",
+            "explanation": "설명."
+        }
+    },
+    {
+        "page": 1,
+        "유형": "OX문제",
+        "question_data": {
+            "question": "'라즈베리파이에서 실행 도중 사용자가 Ctrl + C 키를 입력하여 프로그램을 종료시킬 경우, GPIO.cleanup()이 실행되지 못하고 종료된다.'는 맞는 설명인가?",
+            "choices": [
+                "O",
+                "X"
+            ],
+            "answer": "O",
+            "explanation": "회로에 연결된 부품들을 안전하게 제거하기 위해 프로그램 종료 전에 GPIO.cleanup()을 호출해야 한다. 사용자가 프로그램을 강제로 종료하는 경우에는 이 함수가 실행되지 못하고 종료되게 된다."
+        }
+    },
+    {
+        "page": null,
+        "유형": "주관식",
+        "question_data": {
+            "question": "디지털 값 1을 나타내는 전압은 라즈베리파이의 어디에서 나오는가?",
+            "answer": "GPIO 핀",
+            "explanation": "라즈베리파이의 GPIO 핀에서 '디지털 값 1'이 나타내는 전압이기 때문입니다."
+        }
+    },
+    {
+        "page": null,
+        "유형": "서술형",
+        "question_data": {
+            "question": "inode에서 디스크 블록 관리 방법과 이에 사용되는 블록들의 종류에 대해서 설명하시오.",
+            "answer": "inode는 파일 시스템에서 파일의 메타데이터를 저장하는 데이터 구조로, 디스크 블록 관리에 사용된다. 일반적으로 파일의 데이터를 저장하는 데 사용되는 디스크 블록의 주소를 포인팅하는 트리 구조를 가진다. 이 때 사용되는 블록들에는 다양한 종류가 있다. Direct blocks는 직접 파일의 데이터 블록을 가리킨다. 디스크 블록 관리에서는 이 방식으로 데이터 블록을 포인팅하는 것이 주로 포함되어 있다.",
+            "explanation": "설명."
+        }
+    },
+    {
+        "page": null,
+        "유형": "객관식",
+        "question_data": {
+            "question": "inode에 대한 설명 중 올바르지 않은 것은?",
+            "choices": [
+                "A. inode는 파일 시스템에서 파일을 관리하는데 사용되는 객체이다.",
+                "B. inode는 디스크 블록을 관리하는데 사용된다.",
+                "C. inode에서 사용되는 블록들은 파일을 관리하는 데 필요한 모든 정보를 가지고 있다.",
+                "D. inode는 디스크에서 섹터 주소로 변환하는 작업을 수행한다.",
+                "E. inode 내에는 direct blocks라는 방식으로 data block을 가리키는 정보가 포함되어 있다."
+            ],
+            "answer": "D",
+            "explanation": "inode는 디스크에서 섹터 주소로 변환하는 작업을 수행하는 것이 아니다."
+        }
+    },
+    {
+        "page": 1,
+        "유형": "빈칸 채우기",
+        "question_data": {
+            "question": "라즈베리파이의 GPIO 핀에서 '디지털 값 1'이 나타내는 ______은?",
+            "answer": "전압",
+            "explanation": "디지털 값 1은 일정한 전압을 나타내게 됩니다."
+        }
+    },
+    {
+        "page": 1,
+        "유형": "OX문제",
+        "question_data": {
+            "question": "inode에서 디스크 블록 관리는 direct blocks 방식으로 data block을 가리키는 것이 포함되어 있다.",
+            "choices": [
+                "O",
+                "X"
+            ],
+            "answer": "O",
+            "explanation": "inode에서 디스크 블록 관리는 direct blocks 방식으로 data block을 가리키는 방법이 포함되어 있다. 이는 디스크 블록의 관리에 중요한 역할을 하며, 다음 블록 번호를 가리키는 방식으로 동작한다."
+        }
+    },
+    {
+        "page": null,
+        "유형": "주관식",
+        "question_data": {
+            "question": "GPIO 핀에서 '디지털 값 1'을 삭제하는 라이브러리는?",
+            "answer": "GPIO.cleanup()",
+            "explanation": "GPIO.cleanup() 함수는 사용한 핀들의 번호를 삭제합니다."
+        }
+    }
+]

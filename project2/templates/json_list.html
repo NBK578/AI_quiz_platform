@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}JSON 파일 목록{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2 class="mb-4">JSON 파일 목록</h2>
+
+  {% if files %}
+    <ul class="list-group">
+      {% for fname in files %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          {{ fname }}
+          <div>
+            <!-- 1) 미리보기(브라우저가 JSON inline 표시) -->
+            <a
+              href="{{ url_for('uploaded_file', filename=fname) }}"
+              target="_blank"
+              class="btn btn-sm btn-outline-primary me-2"
+            >미리보기</a>
+            <!-- 2) 다운로드 -->
+            <a
+              href="{{ url_for('uploaded_file', filename=fname) }}"
+              download="{{ fname }}"
+              class="btn btn-sm btn-outline-secondary"
+            >다운로드</a>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div class="alert alert-info">업로드된 JSON 파일이 없습니다.</div>
+  {% endif %}
+</div>
+{% endblock %}

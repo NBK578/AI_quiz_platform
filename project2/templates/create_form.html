@@ -1,0 +1,169 @@
+<style>
+  .file-input-card {
+    background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+    border: 2px dashed #6a11cb;
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+  }
+  .file-input-card:hover {
+    transform: scale(1.02);
+    background: linear-gradient(135deg, #c3cfe2, #f5f7fa);
+  }
+  .form-control-lg {
+    height: 60px;
+    font-size: 1.2rem;
+  }
+  .question-type-grid .btn {
+    background: linear-gradient(135deg, #6a11cb, #2575fc);
+    color: white;
+    border: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .question-type-grid .btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+  .collapse:not(.show) {
+    display: block;
+    height: 0;
+    overflow: hidden;
+    transition: height 0.5s ease;
+  }
+  .collapse.show {
+    height: auto;
+    transition: height 0.5s ease;
+  }
+</style>
+
+<!-- 본문 내용 -->
+<h2 class="mb-4">📄 파일로 문제 생성하기</h2>
+
+<form action="{{ url_for('generate') }}" method="POST" enctype="multipart/form-data" class="loading-form" onsubmit="showLoading()">
+  <div class="file-input-card mb-4">
+    <div class="mb-3">
+      <h3 class="mb-3">파일 선택</h3>
+      <label for="file" class="form-label fs-5">PDF, PNG, JPG 파일 업로드</label>
+      <input
+        type="file"
+        class="form-control form-control-lg"
+        id="file"
+        name="file"
+        required
+        data-bs-toggle="tooltip"
+        data-bs-placement="top"
+        title="PDF, PNG, JPG 파일만 업로드 가능합니다.">
+    </div>
+  </div>
+
+  <div class="text-center mb-3">
+    <button
+      class="btn btn-secondary"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#detailSection"
+      aria-expanded="false"
+      aria-controls="detailSection">
+      상세 사항
+    </button>
+  </div>
+
+  <div class="collapse" id="detailSection">
+    <div class="card card-body mb-4">
+      <h4 class="mb-3">상세 사항</h4>
+
+      <div class="mb-3">
+        <label for="title" class="form-label">문제 세트 제목</label>
+        <input
+          type="text"
+          class="form-control"
+          id="title"
+          name="title"
+          placeholder="예: 2023년 2학기 중간고사">
+      </div>
+
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <label for="total_questions" class="form-label">문제 수</label>
+          <input
+            type="number"
+            class="form-control"
+            id="total_questions"
+            name="total_questions"
+            value="9"
+            required>
+        </div>
+        <div class="col-md-6">
+          <label for="difficulty" class="form-label">난이도</label>
+          <select class="form-select" id="difficulty" name="difficulty">
+            <option value="쉬움">쉬움</option>
+            <option value="보통" selected>보통</option>
+            <option value="어려움">어려움</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">문제 유형 선택</label>
+        <div class="row g-2 question-type-grid">
+          {% for qtype in available_types %}
+            <div class="col-6 col-md-3">
+              <input
+                type="checkbox"
+                class="btn-check"
+                id="qtype_{{ loop.index }}"
+                name="question_types"
+                value="{{ qtype }}"
+                checked>
+              <label class="btn w-100 py-3" for="qtype_{{ loop.index }}">{{ qtype }}</label>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="page_range" class="form-label">PDF인 경우 페이지 범위 (예: 1-5)</label>
+        <input
+          type="text"
+          class="form-control"
+          id="page_range"
+          name="page_range">
+      </div>
+
+      <div class="mb-3">
+        <label for="requirements" class="form-label">추가 요구사항</label>
+        <textarea
+          class="form-control"
+          id="requirements"
+          name="requirements"
+          rows="4"
+          placeholder="예시:&#10;- 특정 주제에 대해 더 많은 문제를 만들어주세요&#10;- 문제에 실생활 예시를 포함해주세요&#10;- 어려운 용어는 쉬운 설명을 추가해주세요"></textarea>
+      </div>
+
+      <div class="mb-3">
+        <label for="custom_prompt" class="form-label">내가 원하는 문제 조건/스타일/유형 (자유 프롬프트)</label>
+        <textarea
+          class="form-control"
+          id="custom_prompt"
+          name="custom_prompt"
+          rows="3"
+          placeholder="예: 모든 문제를 OX형으로, 실생활 예시 포함, 특정 단어 반드시 포함 등"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="text-center">
+    <button type="submit" class="btn btn-primary btn-lg px-5">🚀 문제 생성하기</button>
+  </div>
+</form>
+
+<!-- 스크립트: showLoading 함수 -->
+<script>
+  function showLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+      overlay.style.display = 'flex';
+    }
+  }
+</script>

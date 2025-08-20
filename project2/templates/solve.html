@@ -1,45 +1,123 @@
 {% extends "base.html" %}
-{% block title %}문제 풀이 ({{ progress }}){% endblock %}
+{% block title %}문제 풀이{% endblock %}
+
 {% block content %}
-<div class="container">
-  <h2 class="mb-4 text-center">문제 풀이</h2>
-  <div class="text-center mb-3">
-    <span class="badge bg-info fs-5">{{ progress }}</span>
+<div class="exam-paper my-5">
+  <div class="exam-header text-center mb-4">
+    <h2>테스트용 문제지</h2>
+    <h3 class="fw-bold">『 쪽지시험 』</h3>
+    <div class="info-row d-flex justify-content-between mt-4 px-3">
+      <span>성명 : __________</span>
+      <span>점수 : __________</span>
+    </div>
+    <hr />
   </div>
-  <div class="card mb-4 shadow-sm">
-    <div class="card-body">
-      <h5 class="card-title">문제 ({{ question.get('유형', '문제') }})</h5>
-      {% set qd = question.get('question_data', {}) %}
-      <p class="card-text">
-        <strong>문제:</strong> {{ qd.question|trim if qd.question|trim else "문제가 생성되지 않았습니다." }}
-      </p>
-      {% if question.get('유형') == '빈칸 채우기' %}
-        <div class="mb-3">
-          <label for="answer" class="form-label">답안 입력:</label>
-          <input type="text" class="form-control" id="answer" name="answer" required>
-        </div>
-      {% elif qd.choices %}
-        <div class="mb-3">
-          <label class="form-label">보기:</label>
-          {% for choice in qd.choices %}
+
+  <div class="question-box mb-4">
+    <form method="POST" action="{{ url_for('solve', q=q_index) }}" id="solveForm">
+      <p><strong>Q{{ q_index + 1 }}.</strong> {{ question.question_data.question }}</p>
+
+      {% if question.유형 in ['객관식', 'OX문제'] %}
+        <div class="choices">
+          {% for choice in question.question_data.choices %}
             <div class="form-check">
-              <input class="form-check-input" type="radio" name="answer" id="answer_{{ loop.index }}" value="{{ choice }}">
-              <label class="form-check-label" for="answer_{{ loop.index }}">{{ choice }}</label>
+              <input class="form-check-input" type="radio" name="answer" id="ans{{ loop.index }}" value="{{ choice }}">
+              <label class="form-check-label" for="ans{{ loop.index }}">{{ choice }}</label>
             </div>
           {% endfor %}
         </div>
-      {% else %}
-        <div class="mb-3">
-          <label for="answer" class="form-label">답안 입력:</label>
-          <input type="text" class="form-control" id="answer" name="answer" required>
+      {% elif question.유형 in ['빈칸 채우기', '주관식', '서술형'] %}
+        <div class="mb-3 mt-3">
+          <input type="text" class="form-control" name="answer" placeholder="정답을 입력하세요.">
         </div>
       {% endif %}
-    </div>
-  </div>
-  <div class="text-center">
-    <form action="{{ url_for('solve', q=q_index) }}" method="POST" onsubmit="showLoading()">
-      <button type="submit" class="btn btn-primary btn-lg"><i class="fa-solid fa-arrow-right"></i> 다음 문제</button>
+
+      {% if question.page %}
+        <p class="text-muted small mt-2">※ 출제 페이지: {{ question.page }} 페이지</p>
+      {% endif %}
+
+      <div class="text-end mt-4">
+        <button type="submit" class="btn btn-outline-dark">다음 문제 ➜</button>
+      </div>
+
+      <div id="loading" style="display:none;" class="text-center mt-3">
+        <div class="spinner-border text-secondary" role="status">
+          <span class="visually-hidden">로딩 중...</span>
+        </div>
+      </div>
     </form>
   </div>
 </div>
+
+<audio id="pageSound" src="{{ url_for('static', filename='sounds/page-flip.mp3') }}"></audio>
+
+<style>
+  body {
+    background: #f8f5ec;
+  }
+
+  .exam-paper {
+    max-width: 1100px;
+    margin: auto;
+    padding: 2.5rem;
+    background-color: #fffdf8;
+    border: 2px solid #ccc;
+    box-shadow: 4px 4px 12px rgba(0,0,0,0.1);
+    font-family: 'Nanum Gothic', 'Malgun Gothic', sans-serif;
+    font-size: 1.5rem;
+
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+  }
+
+  .exam-header h2 {
+    font-size: 1.3rem;
+    letter-spacing: 1px;
+    color: #444;
+  }
+
+  .exam-header h3 {
+    font-weight: bold;
+    font-size: 1.7rem;
+  }
+
+  .question-box {
+    border: 1px solid #999;
+    background-color: #ffffff;
+    padding: 1.5rem;
+  }
+
+  .form-check-label {
+    font-weight: 500;
+  }
+
+  .choices .form-check {
+    margin-bottom: 0.6rem;
+  }
+
+  .btn-outline-dark {
+    font-weight: bold;
+    padding: 0.5rem 1.5rem;
+  }
+</style>
+
+<script>
+  const form = document.getElementById('solveForm');
+  const sound = document.getElementById('pageSound');
+  const loading = document.getElementById('loading');
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    sound.play();
+    loading.style.display = 'block';
+
+    setTimeout(() => {
+      form.submit();
+    }, 600);
+  });
+</script>
 {% endblock %}
