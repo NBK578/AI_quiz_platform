@@ -20,8 +20,13 @@
 🛠️ 사용 기술
 영역	기술 스택
 백엔드	Python, Flask
+
 AI	OpenAI GPT API (Function calling)
+
 프론트엔드	HTML, CSS, Bootstrap, Jinja2
+
 문서 분석	PyMuPDF (fitz), pytube, youtube_transcript_api
+
 음성 변환	faster-whisper
+
 환경 관리	pip, requirements.txt, venv
