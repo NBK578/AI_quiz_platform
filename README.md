@@ -60,9 +60,7 @@ pip install -r requirements.txt
 # 실행
 python app.py
 
-
 ---
-
 
 ## 디렉토리 구조
 
@@ -79,7 +77,6 @@ python app.py
 ├── uploads/                # 업로드 파일 저장 폴더
 ├── requirements.txt        # 패키지 의존성 리스트
 └── README.md               # 프로젝트 설명 (이 파일)
-
 
 ---
 
