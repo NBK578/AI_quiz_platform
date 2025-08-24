@@ -1,11 +1,66 @@
 {% extends "base.html" %}
-{% block title %}메인 페이지{% endblock %}
+{% block title %}메인{% endblock %}
+
 {% block content %}
-<div class="p-5 mb-4 bg-light rounded-3">
-  <div class="container-fluid py-5">
-    <h1 class="display-5 fw-bold">문제를 자동 생성해드립니다!</h1>
-    <p class="col-md-8 fs-4">PDF 또는 이미지를 업로드하여 AI가 자동으로 문제를 생성합니다. 간편하고 빠르게 사용해 보세요.</p>
-    <a class="btn btn-primary btn-lg" href="{{ url_for('create') }}" role="button">문제 생성하기</a>
+  <!-- 1) 문제 생성 섹션 -->
+  <div class="mb-5">
+    <h4 class="mb-3">
+      문제 생성 <small class="text-muted">PDF/유튜브 업로드부터 재생성까지</small>
+    </h4>
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+      <div class="col">
+        <div class="card h-100 p-3 text-center" data-bs-toggle="modal" data-bs-target="#createModal">
+          <i class="fa-solid fa-file-import fa-3x mb-2 text-primary"></i>
+          <h5 class="card-title">문제 생성</h5>
+          <p class="card-text small">PDF/유튜브 링크 업로드 후 AI가 문제 생성</p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card h-100 p-3 text-center" data-bs-toggle="modal" data-bs-target="#multiCreateModal">
+          <i class="fa-solid fa-layer-group fa-3x mb-2 text-success"></i>
+          <h5 class="card-title">다중 업로드</h5>
+          <p class="card-text small">여러 파일 한 번에 문제 생성</p>
+        </div>
+      </div>
+      <div class="col">
+        <a href="{{ url_for('recreate') }}" class="card h-100 p-3 text-center text-decoration-none text-reset">
+          <i class="fa-solid fa-arrows-rotate fa-3x mb-2 text-warning"></i>
+          <h5 class="card-title">재생성</h5>
+          <p class="card-text small">기존 JSON 기반 새 문제 생성</p>
+        </a>
+      </div>
+    </div>
   </div>
-</div>
+
+  <!-- 2) AI 도구 섹션 -->
+  <div class="mb-5">
+    <h4 class="mb-3">
+      AI 도구 <small class="text-muted">내게 필요한 AI 기능 한눈에</small>
+    </h4>
+    <div class="row row-cols-1 row-cols-md-2 g-4">
+      <div class="col">
+        <div class="card h-100 p-3 text-center" onclick="location.href='{{ url_for('debate.debate')}}'">
+          <i class="fa-solid fa-comments fa-3x mb-2 text-info"></i>
+          <h5 class="card-title">AI 토론</h5>
+          <p class="card-text small">토론 주제를 AI와 시뮬레이션</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3) 미디어 관리 섹션 -->
+  <div class="mb-5">
+    <h4 class="mb-3">
+      미디어 관리 <small class="text-muted">생성된 영상 한눈에</small>
+    </h4>
+    <div class="row row-cols-1 row-cols-md-2 g-4">
+      <div class="col">
+        <a href="{{ url_for('shorts') }}" class="card h-100 p-3 text-center text-decoration-none text-reset">
+          <i class="fa-solid fa-video fa-3x mb-2 text-danger"></i>
+          <h5 class="card-title">쇼츠 관리</h5>
+          <p class="card-text small">생성된 쇼츠 영상 확인·다운로드</p>
+        </a>
+      </div>
+    </div>
+  </div>
 {% endblock %}

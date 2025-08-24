@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}유튜브로 문제 생성{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2 class="mb-4 text-center">🎥 유튜브 영상으로 문제 생성</h2>
+  <form action="{{ url_for('youtube_generate') }}" method="POST">
+    <div class="card mb-4">
+      <div class="card-body">
+        <h5 class="card-title mb-3">1. 유튜브 링크 입력</h5>
+        <div class="mb-3">
+          <input
+            type="url"
+            name="youtube_url"
+            class="form-control form-control-lg"
+            placeholder="https://youtu.be/..."
+            required>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-body">
+        <h5 class="card-title mb-3">2. 문제 설정</h5>
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label">문제 수</label>
+            <input
+              type="number"
+              name="total_questions"
+              class="form-control"
+              placeholder="문제 수"
+              value="9"
+              required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">난이도</label>
+            <select
+              name="difficulty"
+              class="form-select">
+              <option value="쉬움">쉬움</option>
+              <option value="보통" selected>보통</option>
+              <option value="어려움">어려움</option>
+            </select>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">문제 유형</label>
+          <div class="row g-2">
+            {% for qtype in available_types %}
+            <div class="col-6 col-md-3">
+              <input
+                type="checkbox"
+                class="btn-check"
+                id="yt_qtype_{{ loop.index }}"
+                name="question_types"
+                value="{{ qtype }}"
+                checked>
+              <label
+                class="btn btn-outline-secondary w-100"
+                for="yt_qtype_{{ loop.index }}">
+                {{ qtype }}
+              </label>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-body">
+        <h5 class="card-title mb-3">3. 추가 요구사항</h5>
+        <div class="mb-3">
+          <textarea
+            name="requirements"
+            class="form-control"
+            rows="4"
+            placeholder="예시:&#10;- 특정 주제에 대해 더 많은 문제를 만들어주세요&#10;- 문제에 실생활 예시를 포함해주세요&#10;- 어려운 용어는 쉬운 설명을 추가해주세요"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="text-center">
+      <button type="submit" class="btn btn-primary btn-lg px-5">
+        🚀 문제 생성하기
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

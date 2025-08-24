@@ -1,30 +1,43 @@
 {% extends "base.html" %}
-{% block title %}문제 생성 결과{% endblock %}
+{% block title %}전체 결과{% endblock %}
+
 {% block content %}
-<h2 class="mb-4">생성된 문제 미리보기</h2>
-<div class="row">
-  {% for q in questions %}
-    <div class="col-md-6 mb-3">
-      <div class="card shadow-sm">
-        <div class="card-body">
-          <h5 class="card-title">{{ q.get('유형', '문제') }} 문제</h5>
-          {% set qd = q.get('question_data', {}) %}
-          <p class="card-text">
-            <strong>문제:</strong>
-            {{ qd.question|trim if qd.question|trim else "문제가 생성되지 않았습니다." }}
-          </p>
-          {% if qd.choices %}
-            <p class="card-text">
-              <strong>보기:</strong> {{ qd.choices | join(", ") }}
-            </p>
-          {% endif %}
-        </div>
-      </div>
+<div class="container mt-5">
+  <h2 class="mb-4">전체 생성 및 채점 결과</h2>
+
+  <div class="mb-3">
+    <a href="{{ url_for('download_file') }}" class="btn btn-success">문제 파일 다운로드</a>
+    <a href="{{ url_for('grade') }}" class="btn btn-primary">전체 채점 페이지로 이동</a>
+    
+    {# 추가: 쇼츠 만들기 버튼 #}
+    <a href="{{ url_for('shorts') }}" class="btn btn-warning">🎬 쇼츠 관리</a>
+  </div>
+
+  <ul class="list-group">
+    {% for q in questions %}
+      <li class="list-group-item">
+        <strong>문제 {{ loop.index }}:</strong> {{ q.question_data.question }}
+        {% if q.page %}
+          <br><small class="text-muted">출제 페이지: {{ q.page }} 페이지</small>
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+
+  {# 추가: 생성된 쇼츠 목록 표시 #}
+  {% if session.get('shorts') %}
+    <div class="mt-4">
+      <h4>생성된 쇼츠 영상</h4>
+      <ul class="list-group">
+        {% for fname in session.shorts %}
+          <li class="list-group-item">
+            <a href="{{ url_for('static', filename='output/' ~ fname) }}" target="_blank">
+              {{ fname }}
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
     </div>
-  {% endfor %}
-</div>
-<div class="text-center mt-4">
-  <a href="{{ url_for('download_file') }}" class="btn btn-info me-2">다운로드</a>
-  <a href="{{ url_for('grade') }}" class="btn btn-success">채점하기</a>
+  {% endif %}
 </div>
 {% endblock %}

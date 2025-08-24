@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}토론 모드 선택{% endblock %}
+
+{% block content %}
+<style>
+    .mode-select-container {
+        text-align: center;
+        margin-top: 80px;
+    }
+
+    .mode-title {
+        font-size: 2rem;
+        margin-bottom: 20px;
+    }
+
+    .mode-description {
+        color: #555;
+        margin-bottom: 40px;
+    }
+
+    .mode-options {
+        display: flex;
+        justify-content: center;
+        gap: 40px;
+        flex-wrap: wrap;
+    }
+
+    .mode-card {
+        background: #ffffff;
+        padding: 30px 40px;
+        border-radius: 15px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        width: 280px;
+        transition: transform 0.3s ease;
+        text-decoration: none;
+        color: inherit;
+    }
+
+        .mode-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        .mode-card h3 {
+            margin-top: 10px;
+            margin-bottom: 15px;
+        }
+
+        .mode-card p {
+            color: #666;
+        }
+</style>
+
+<div class="mode-select-container">
+    <div class="mode-title">🤖 AI 토론 모드 선택</div>
+    <div class="mode-description">두 가지 토론 방식 중 하나를 선택하세요</div>
+    <div class="mode-options">
+        <a href="{{ url_for('debate.debate', mode='gpt_vs_gpt') }}" class="mode-card">
+            <img src="https://img.icons8.com/ios-filled/50/275efe/artificial-intelligence.png" alt="GPTvsGPT" />
+            <h3>GPT vs GPT</h3>
+            <p>AI끼리 찬반을 나누어 주제에 대해 자동 토론을 진행합니다.</p>
+        </a>
+        <a href="{{ url_for('debate.debate', mode='user_vs_gpt') }}" class="mode-card">
+            <img src="https://img.icons8.com/ios-filled/50/275efe/handshake.png" alt="UservsGPT" />
+            <h3>사용자 vs GPT</h3>
+            <p>사용자가 AI와 직접 주제를 두고 찬반 토론을 진행합니다.</p>
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -1,173 +1,373 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{% block title %}문제 생성 서비스{% endblock %}</title>
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-  <!-- Bootstrap 5 CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Font Awesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <!-- Custom CSS -->
+
+  <!-- Google Fonts, Bootstrap, Font Awesome -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
+    rel="stylesheet"
+  />
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
+  <link
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    rel="stylesheet"
+  />
+
   <style>
+    /* ─── 공통 스타일 ─── */
     body {
-      padding-top: 70px;
       font-family: 'Roboto', sans-serif;
-      transition: background-color 0.3s ease, color 0.3s ease;
-    }
-    .navbar-brand {
-      font-weight: bold;
+      padding-top: 70px;
+      transition: background-color .3s, color .3s;
     }
     .card {
-      transition: transform 0.2s ease;
+      transition: transform .2s;
+      cursor: pointer;
     }
     .card:hover {
       transform: scale(1.02);
     }
-    .spinner-overlay {
+    body.dark-mode {
+      background: #121212;
+      color: #e0e0e0;
+    }
+    body.dark-mode .card {
+      background: #1e1e1e;
+    }
+
+    /* ─── 네비게이션 ─── */
+    .navbar.fixed-top {
+      z-index: 3000;
+    }
+
+    /* ─── 사이드바 ─── */
+    #sidebar {
       position: fixed;
       top: 0;
       left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(255, 255, 255, 0.8);
-      z-index: 1050;
+      width: 240px;               /* 기본 너비 */
+      height: 100vh;
+      background: #f8f9fa;
+      border-right: 1px solid #dee2e6;
+      padding-top: 4rem;
+      transition: width .3s ease;
+      overflow: hidden;
+      z-index: 1000;
+    }
+    /* 접힌 상태: 최소 너비 60px, 메뉴 아이템 숨김, 헤더 텍스트 숨김 */
+    #sidebar.collapsed {
+      width: 60px;                /* 최소 너비를 60px로 설정 */
+      border-right: none;
+    }
+    /* 접힌 상태에서는 메뉴(텍스트) 표시 X */
+    #sidebar.collapsed .nav-link {
+      display: none !important;
+    }
+    /* 접힌 상태에서는 헤더 텍스트(메뉴) 숨기고 버튼만 보이도록 */
+    #sidebar.collapsed .sidebar-header h5 {
       display: none;
+    }
+
+    /* 사이드바 헤더: 좌측 텍스트, 우측 토글 버튼 */
+    #sidebar .sidebar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #dee2e6;
+    }
+    #sidebar .sidebar-header h5 {
+      margin: 0;
+      font-size: 1.1rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    #sidebar .sidebar-header button {
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+      color: #495057;
+      cursor: pointer;
+      transition: color .2s;
+    }
+    #sidebar .sidebar-header button:hover {
+      color: #212529;
+    }
+
+    #sidebar .nav-link {
+      color: #495057;
+      padding: .75rem 1rem;
+      display: flex;
+      align-items: center;
+      transition: background .2s;
+    }
+    #sidebar .nav-link i {
+      width: 1.25rem;
+      margin-right: .5rem;
+      text-align: center;
+    }
+    #sidebar .nav-link:hover {
+      background: #e9ecef;
+      color: #212529;
+    }
+    #sidebar .nav-link.active {
+      background: #dee2e6;
+      font-weight: 500;
+    }
+
+    /* ─── 메인 콘텐츠 ─── */
+    .main-content {
+      margin-left: 240px;         /* 사이드바 전체 너비만큼 여백 */
+      padding: 1rem 2rem;
+      transition: margin-left .3s ease;
+    }
+    /* 사이드바 접힐 때: 최소 너비(60px)만큼만 여백 */
+    .main-content.expanded {
+      margin-left: 60px;
+    }
+
+    /* ─── 로딩 오버레이 ─── */
+    #loadingOverlay {
+      display: none;              /* 기본 숨김 */
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 5000;
       align-items: center;
       justify-content: center;
-      transition: opacity 0.3s ease;
+      flex-direction: column;
+      color: #ffffff;
+      text-align: center;
+      padding: 1rem;
     }
-    /* Dark mode 스타일 */
-    body.dark-mode {
-      background-color: #121212;
-      color: #e0e0e0;
+    /* 사용자 정의 로더 스타일 */
+    .loader {
+      width: 50px;
+      --b: 8px; 
+      aspect-ratio: 1;
+      border-radius: 50%;
+      padding: 1px;
+      background: conic-gradient(#0000 10%, #f03355) content-box;
+      -webkit-mask:
+        repeating-conic-gradient(#0000 0deg, #000 1deg 20deg, #0000 21deg 36deg),
+        radial-gradient(farthest-side, #0000 calc(100% - var(--b) - 1px), #000 calc(100% - var(--b)));
+      -webkit-mask-composite: destination-in;
+              mask-composite: intersect;
+      animation: l4 1s infinite steps(10);
     }
-    body.dark-mode .navbar, body.dark-mode .card {
-      background-color: #1e1e1e;
+    @keyframes l4 {
+      to { transform: rotate(1turn); }
     }
-    /* Toast 컨테이너 */
-    #toast-container {
-      position: fixed;
-      top: 1rem;
-      right: 1rem;
-      z-index: 1100;
+    .loading-text {
+      font-size: 1.25rem;
+      margin-top: 1rem;
+      margin-bottom: 0.5rem;
     }
+    .loading-index {
+      font-size: 1rem;
+      opacity: 0.8;
+    }
+
+    .main-content.no-sidebar {
+    margin-left: 0 !important;
+    }
+
+    /* ─── (필요 시 모달/토스트/기타 공통 스타일 추가) ─── */
   </style>
+
   {% block head %}{% endblock %}
 </head>
-<body>
-  <!-- 네비게이션 바 -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
-    <div class="container">
-      <a class="navbar-brand" href="{{ url_for('index') }}"><i class="fa-solid fa-file-lines"></i> 문제 생성 서비스</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}">메인</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ url_for('create') }}">문제 생성</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ url_for('multi_create') }}">다중 파일 업로드</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ url_for('recreate') }}">재문제 생성</a></li>
-          {% if session.get("user") %}
-            <li class="nav-item"><a class="nav-link" href="{{ url_for('history') }}">내 기록</a></li>
-            <li class="nav-item"><a class="nav-link" href="{{ url_for('logout') }}">로그아웃</a></li>
-          {% else %}
-            <li class="nav-item"><a class="nav-link" href="{{ url_for('google.login') }}">구글 로그인</a></li>
-          {% endif %}
-          <!-- 다크 모드 토글 버튼 -->
-          <li class="nav-item">
-            <button id="darkModeToggle" class="btn btn-outline-light ms-2"><i class="fa-solid fa-moon"></i></button>
+
+
+<body class="d-flex">
+
+  <!-- 로딩 오버레이 -->
+  <div id="loadingOverlay">
+    <div class="loader"></div>
+    <div class="loading-text" id="loadingMessage">로딩 중입니다...</div>
+  </div>
+
+  <!-- 상단 네비게이션 바 -->
+  <nav class="navbar navbar-dark bg-primary fixed-top">
+    <div class="container-fluid ps-3 d-flex justify-content-between">
+      <a class="navbar-brand" href="{{ url_for('index') }}">
+        <i class="fa-solid fa-file-lines"></i> 문제 생성 서비스
+      </a>
+      <ul class="navbar-nav flex-row align-items-center gap-3 pe-3">
+        <li class="nav-item"><a class="nav-link text-white" href="{{ url_for('index') }}">메인</a></li>
+        <li class="nav-item"><a class="nav-link text-white" data-bs-toggle="modal" data-bs-target="#createModal">문제 생성</a></li>
+        <li class="nav-item"><a class="nav-link text-white" data-bs-toggle="modal" data-bs-target="#multiCreateModal">다중 업로드</a></li>
+        <li class="nav-item"><a class="nav-link text-white" href="{{ url_for('recreate') }}">재생성</a></li>
+        <li class="nav-item"><a class="nav-link text-white" href="{{ url_for('debate.debate') }}">AI토론</a></li>
+        <li class="nav-item"><a class="nav-link text-white" href="{{ url_for('shorts') }}">쇼츠 관리</a></li>
+
+        {% if current_user %}
+          <!-- 로그인 상태: 사용자 이름/이메일 표시 + 로그아웃 -->
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="fa-regular fa-user"></i>
+              {{ current_user.name or current_user.email }}
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <!-- 필요한 라우트로 변경 가능 -->
+              <li><a class="dropdown-item" href="{{ url_for('index') }}">대시보드</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('logout') }}">로그아웃</a></li>
+            </ul>
           </li>
-        </ul>
-      </div>
+        {% else %}
+          <!-- 비로그인 상태: 구글 로그인 버튼 -->
+          <li class="nav-item">
+            <a class="nav-link text-white" href="{{ url_for('google.login') }}">
+              <i class="fa-brands fa-google"></i> 구글 로그인
+            </a>
+          </li>
+        {% endif %}
+
+        <li class="nav-item">
+          <button id="darkModeToggle" class="btn btn-outline-light">
+            <i class="fa-solid fa-moon"></i>
+          </button>
+        </li>
+      </ul>
     </div>
   </nav>
 
-  <!-- 로딩 오버레이 -->
-  <div id="loading-overlay" class="spinner-overlay">
-    <div class="text-center">
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
+  <!-- 플래시 메시지 -->
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div class="container mt-3" style="max-width: 960px;">
+        {% for message in messages %}
+          <div class="alert alert-info alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
       </div>
-      <p class="mt-2">문제 생성 중... 잠시만 기다려 주세요.</p>
+    {% endif %}
+  {% endwith %}
+
+  {% if not hide_sidebar %}
+  <!-- 사이드바 -->
+  <nav id="sidebar">
+    <div class="sidebar-header">
+      <h5 class="m-0"><i class="fa-solid fa-file-lines"></i> 메뉴</h5>
+      <button id="toggleSidebar"><i class="fa-solid fa-chevron-left"></i></button>
+    </div>
+
+    <ul class="nav flex-column">
+      <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}"><i class="fa-solid fa-house"></i> 메인</a></li>
+      <li class="nav-item"><a class="nav-link" data-bs-toggle="modal" data-bs-target="#multiCreateModal"><i class="fa-solid fa-layer-group"></i> 다중 업로드</a></li>
+      <li class="nav-item"><a class="nav-link" href="{{ url_for('recreate') }}"><i class="fa-solid fa-arrows-rotate"></i> 재생성</a></li>
+      <li class="nav-item"><a class="nav-link" href="{{ url_for('debate.debate') }}"><i class="fa-solid fa-comments"></i> AI토론</a></li>
+      <li class="nav-item"><a class="nav-link" href="{{ url_for('shorts') }}"><i class="fa-solid fa-video"></i> 쇼츠 관리</a></li>
+    </ul>
+  </nav>
+  {% endif %}
+
+  <!-- 메인 콘텐츠 -->
+  <main class="main-content {% if hide_sidebar %}no-sidebar{% endif %}" id="contentArea">
+    <div class="container">
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+
+  <!-- 모달: 문제 생성 -->
+  <div class="modal fade" id="createModal" tabindex="-1" aria-labelledby="createModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="createModalLabel"><i class="fa-solid fa-file-import"></i> 문제 생성</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="닫기"></button>
+        </div>
+        <div class="modal-body">
+                    {# create_form.html 안의 <form> 태그에 class="loading-form"을 추가해주세요. #}
+          {% include 'create_form.html' %}
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Toast 알림 컨테이너 -->
-  <div id="toast-container"></div>
-
-  <div class="container mt-4">
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        {% for msg in messages %}
-          <div class="toast align-items-center text-bg-warning border-0" role="alert" aria-live="assertive" aria-atomic="true">
-            <div class="d-flex">
-              <div class="toast-body">
-                {{ msg }}
-              </div>
-              <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-          </div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
-    {% block content %}{% endblock %}
+  <!-- 모달: 다중 업로드 -->
+  <div class="modal fade" id="multiCreateModal" tabindex="-1" aria-labelledby="multiCreateModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="multiCreateModalLabel"><i class="fa-solid fa-layer-group"></i> 다중 업로드</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="닫기"></button>
+        </div>
+        <div class="modal-body">
+          {# multi_create_form.html 안의 <form> 태그에도 class="loading-form"을 추가해주세요. #}
+          {% include 'multi_create_form.html' %}
+        </div>
+      </div>
+    </div>
   </div>
 
-  <!-- Bootstrap 5 JS & jQuery -->
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <!-- Anime.js for 애니메이션 효과 -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
-  {% block scripts %}
+
   <script>
-    // 페이지 로드 시 fade-in 애니메이션
-    document.addEventListener("DOMContentLoaded", function() {
-      anime({
-        targets: 'body',
-        opacity: [0, 1],
-        duration: 1000,
-        easing: 'easeOutQuad'
+    // ─── 사이드바 토글 (요소가 있을 때만) ───
+    (function () {
+      const btn = document.getElementById('toggleSidebar');
+      if (!btn) return; // hide_sidebar=True 일 때 에러 방지
+
+      btn.addEventListener('click', function () {
+        const sidebar = document.getElementById('sidebar');
+        const content = document.getElementById('contentArea');
+        const icon = this.querySelector('i');
+
+        sidebar.classList.toggle('collapsed');
+        content.classList.toggle('expanded');
+
+        if (sidebar.classList.contains('collapsed')) {
+          icon.classList.remove('fa-chevron-left');
+          icon.classList.add('fa-chevron-right');
+        } else {
+          icon.classList.remove('fa-chevron-right');
+          icon.classList.add('fa-chevron-left');
+        }
       });
-      // 토스트 초기화 및 표시
-      var toastElList = [].slice.call(document.querySelectorAll('.toast'));
-      toastElList.map(function(toastEl) {
-        var toast = new bootstrap.Toast(toastEl);
-        toast.show();
-        return toast;
-      });
-    });
-    // 객관식 라디오 버튼 취소 기능
-    document.addEventListener("DOMContentLoaded", function() {
-      document.querySelectorAll('input[type="radio"]').forEach(function(radio) {
-        radio.addEventListener('click', function() {
-          if (this.wasChecked) {
-            this.checked = false;
-            this.wasChecked = false;
-          } else {
-            document.querySelectorAll('input[name="' + this.name + '"]').forEach(function(r) {
-              r.wasChecked = false;
-            });
-            this.wasChecked = true;
-          }
-        });
-      });
-    });
-    // 다크 모드 토글
-    document.getElementById('darkModeToggle').addEventListener('click', function() {
+    })();
+
+    // ─── 다크 모드 토글 ───
+    document.getElementById('darkModeToggle').addEventListener('click', function () {
       document.body.classList.toggle('dark-mode');
-      var icon = this.querySelector('i');
-      icon.classList.toggle('fa-moon');
-      icon.classList.toggle('fa-sun');
+      const moonSun = this.querySelector('i');
+      moonSun.classList.toggle('fa-moon');
+      moonSun.classList.toggle('fa-sun');
     });
-    // 로딩 함수
-    function showLoading() {
-      document.getElementById('loading-overlay').style.display = 'flex';
+
+    function showLoading(message = '') {
+      const overlay = document.getElementById('loadingOverlay');
+      const msgEl   = document.getElementById('loadingMessage');
+      msgEl.innerText = message;
+      overlay.style.display = 'flex';
     }
+    function hideLoading() { document.getElementById('loadingOverlay').style.display = 'none'; }
+
+    // ─── 폼 제출 시 로딩 ───
+    document.querySelectorAll('form.loading-form').forEach(form => {
+      form.addEventListener('submit', function () {
+        showLoading('문제 생성중입니다...');
+      });
+    });
+
+    // 페이지 로드 후 로딩 오버레이 숨김
+    window.addEventListener('load', hideLoading);
   </script>
-  {% endblock %}
+
+  {% block scripts %}{% endblock %}
 </body>
 </html>
+

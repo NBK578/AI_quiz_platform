@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <title>PDF 생성 완료</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  </head>
+  <body class="container mt-5">
+    <h2 class="mb-4 text-center">PDF 생성 완료</h2>
+    <p class="text-center">아래 버튼을 통해 PDF 파일을 다운로드하거나 변환 작업을 재시도하세요.</p>
+    <div class="text-center">
+      <a href="{{ url_for('download_youtube_pdf', filename=filename) }}" class="btn btn-success mb-3">PDF 다운로드</a>
+      <br>
+      <a href="{{ url_for('youtube_to_pdf_route') }}" class="btn btn-secondary">다시 변환하기</a>
+    </div>
+  </body>
+</html>

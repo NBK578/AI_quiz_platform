@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <title>YouTube PDF 변환</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  </head>
+  <body class="container mt-5">
+    <h2 class="mb-4 text-center">유튜브 영상 → PDF 변환</h2>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+      <div class="alert alert-warning" role="alert">
+        {% for message in messages %}
+          <p>{{ message }}</p>
+        {% endfor %}
+      </div>
+      {% endif %}
+    {% endwith %}
+    <form action="{{ url_for('youtube_to_pdf_route') }}" method="POST">
+      <div class="form-group">
+        <label for="youtube_url">유튜브 링크 입력:</label>
+        <input type="url" class="form-control" id="youtube_url" name="youtube_url" placeholder="https://youtu.be/..." required>
+      </div>
+      <button type="submit" class="btn btn-primary">PDF로 변환</button>
+    </form>
+  </body>
+</html>
