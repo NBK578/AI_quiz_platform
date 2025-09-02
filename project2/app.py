@@ -63,7 +63,7 @@ with app.app_context():
 
 
 # OpenAI API 및 Tesseract 경로 설정
-openai.api_key = "Your_secret_number"
+openai.api_key = "your_secret_number"
 pytesseract.pytesseract.tesseract_cmd = r"C:\Users\USER\Desktop\2024\tesseract.exe"
 
 

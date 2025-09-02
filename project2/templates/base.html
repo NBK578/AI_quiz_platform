@@ -6,183 +6,244 @@
   <title>{% block title %}문제 생성 서비스{% endblock %}</title>
 
   <!-- Google Fonts, Bootstrap, Font Awesome -->
-  <link
-    href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
-    rel="stylesheet"
-  />
-  <link
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-    rel="stylesheet"
-  />
-  <link
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    rel="stylesheet"
-  />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
 
   <style>
-    /* ─── 공통 스타일 ─── */
+    /* =========================
+       0) 테마 변수 (Light / Dark)
+       ========================= */
+    :root{
+      --bg: #ffffff;
+      --fg: #111827;
+      --muted: #6b7280;
+      --card: #ffffff;
+      --card-hover: #f3f4f6;
+      --border: #e5e7eb;
+      --link: #2563eb;
+      --link-hover: #1d4ed8;
+
+      --sidebar-bg: #f8f9fa;
+      --sidebar-fg: #495057;
+      --sidebar-hover-bg: #e9ecef;
+      --sidebar-active-bg: #dee2e6;
+
+      --navbar-bg: #0d6efd;   /* 부트스트랩 primary */
+      --navbar-fg: #ffffff;
+
+      --dropdown-bg: #ffffff;
+      --dropdown-fg: #111827;
+
+      --modal-bg: #ffffff;
+      --modal-fg: #111827;
+
+      --table-bg: #ffffff;
+      --table-fg: #111827;
+
+      --chip-bg: #eef2ff;
+    }
+
+    body.dark-mode{
+      --bg: #0f1115;
+      --fg: #e5e7eb;
+      --muted: #9ca3af;
+      --card: #171a21;
+      --card-hover: #1d212a;
+      --border: #2a2f3a;
+      --link: #93c5fd;
+      --link-hover: #bfdbfe;
+
+      --sidebar-bg: #141821;
+      --sidebar-fg: #ced4da;
+      --sidebar-hover-bg: #1a2030;
+      --sidebar-active-bg: #1f2635;
+
+      /* 네비바는 primary 그대로 쓰되 글자 대비만 보장 */
+      --navbar-bg: #0d6efd;
+      --navbar-fg: #ffffff;
+
+      --dropdown-bg: #171a21;
+      --dropdown-fg: #e5e7eb;
+
+      --modal-bg: #171a21;
+      --modal-fg: #e5e7eb;
+
+      --table-bg: #171a21;
+      --table-fg: #e5e7eb;
+
+      --chip-bg: #1f2937;
+    }
+
+    /* =========================
+       1) 공통 스타일
+       ========================= */
     body {
       font-family: 'Roboto', sans-serif;
       padding-top: 70px;
+      background: var(--bg) !important;
+      color: var(--fg) !important;
       transition: background-color .3s, color .3s;
     }
-    .card {
-      transition: transform .2s;
+    a, .nav-link { color: var(--link); }
+    a:hover, .nav-link:hover { color: var(--link-hover); }
+
+    .text-muted, .form-text, small { color: var(--muted) !important; }
+
+    .card, .list-group-item {
+      background: var(--card) !important;
+      color: var(--fg) !important;
+      border-color: var(--border) !important;
+      transition: transform .2s, background-color .2s;
       cursor: pointer;
     }
-    .card:hover {
-      transform: scale(1.02);
-    }
-    body.dark-mode {
-      background: #121212;
-      color: #e0e0e0;
-    }
-    body.dark-mode .card {
-      background: #1e1e1e;
-    }
+    .card:hover { transform: scale(1.02); background: var(--card-hover) !important; }
 
-    /* ─── 네비게이션 ─── */
-    .navbar.fixed-top {
-      z-index: 3000;
+    /* =========================
+       2) 네비게이션 바
+       ========================= */
+    .navbar.fixed-top { z-index: 3000; }
+    .navbar { background: var(--navbar-bg) !important; }
+    .navbar .navbar-brand, .navbar .nav-link, .navbar .dropdown-toggle, .navbar .navbar-text { color: var(--navbar-fg) !important; }
+    .navbar .dropdown-menu {
+      background: var(--dropdown-bg);
+      color: var(--dropdown-fg);
+      border-color: var(--border);
     }
+    .navbar .dropdown-item { color: var(--dropdown-fg); }
+    .navbar .dropdown-item:hover { background: var(--card-hover); color: var(--fg); }
 
-    /* ─── 사이드바 ─── */
+    /* =========================
+       3) 사이드바
+       ========================= */
     #sidebar {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 240px;               /* 기본 너비 */
+      top: 0; left: 0;
+      width: 240px;
       height: 100vh;
-      background: #f8f9fa;
-      border-right: 1px solid #dee2e6;
+      background: var(--sidebar-bg);
+      color: var(--sidebar-fg);
+      border-right: 1px solid var(--border);
       padding-top: 4rem;
-      transition: width .3s ease;
+      transition: width .3s ease, background-color .3s, color .3s, border-color .3s;
       overflow: hidden;
       z-index: 1000;
     }
-    /* 접힌 상태: 최소 너비 60px, 메뉴 아이템 숨김, 헤더 텍스트 숨김 */
-    #sidebar.collapsed {
-      width: 60px;                /* 최소 너비를 60px로 설정 */
-      border-right: none;
-    }
-    /* 접힌 상태에서는 메뉴(텍스트) 표시 X */
-    #sidebar.collapsed .nav-link {
-      display: none !important;
-    }
-    /* 접힌 상태에서는 헤더 텍스트(메뉴) 숨기고 버튼만 보이도록 */
-    #sidebar.collapsed .sidebar-header h5 {
-      display: none;
-    }
-
-    /* 사이드바 헤더: 좌측 텍스트, 우측 토글 버튼 */
     #sidebar .sidebar-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      display: flex; align-items: center; justify-content: space-between;
       padding: 0.75rem 1rem;
-      border-bottom: 1px solid #dee2e6;
+      border-bottom: 1px solid var(--border);
+      color: var(--sidebar-fg);
     }
-    #sidebar .sidebar-header h5 {
-      margin: 0;
-      font-size: 1.1rem;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
+    #sidebar .sidebar-header h5 { margin: 0; font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     #sidebar .sidebar-header button {
-      background: none;
-      border: none;
-      font-size: 1.2rem;
-      color: #495057;
-      cursor: pointer;
-      transition: color .2s;
+      background: none; border: none; font-size: 1.2rem; color: var(--sidebar-fg); cursor: pointer;
     }
-    #sidebar .sidebar-header button:hover {
-      color: #212529;
-    }
-
     #sidebar .nav-link {
-      color: #495057;
+      color: var(--sidebar-fg);
       padding: .75rem 1rem;
-      display: flex;
-      align-items: center;
-      transition: background .2s;
+      display: flex; align-items: center;
+      transition: background .2s, color .2s;
     }
-    #sidebar .nav-link i {
-      width: 1.25rem;
-      margin-right: .5rem;
-      text-align: center;
+    #sidebar .nav-link i { width: 1.25rem; margin-right: .5rem; text-align: center; color: currentColor; }
+    #sidebar .nav-link:hover { background: var(--sidebar-hover-bg); color: var(--fg); }
+    #sidebar .nav-link.active { background: var(--sidebar-active-bg); font-weight: 500; color: var(--fg); }
+
+    /* 접힘 */
+    #sidebar.collapsed { width: 60px; border-right: none; }
+    #sidebar.collapsed .nav-link { display: none !important; }
+    #sidebar.collapsed .sidebar-header h5 { display: none; }
+
+    /* =========================
+       4) 메인 콘텐츠
+       ========================= */
+    .main-content { margin-left: 240px; padding: 1rem 2rem; transition: margin-left .3s ease; }
+    .main-content.expanded { margin-left: 60px; }
+    .main-content.no-sidebar { margin-left: 0 !important; }
+
+    /* =========================
+       5) 폼 / 테이블 / 모달 / 드롭다운
+       ========================= */
+    .form-control, .form-select, .input-group-text {
+      background: var(--card) !important;
+      color: var(--fg) !important;
+      border-color: var(--border) !important;
     }
-    #sidebar .nav-link:hover {
-      background: #e9ecef;
-      color: #212529;
+    .form-control::placeholder { color: var(--muted) !important; }
+
+    .table{
+      --bs-table-bg: var(--table-bg);
+      --bs-table-color: var(--table-fg);
+      --bs-table-border-color: var(--border);
+      color: var(--table-fg);
+      background: var(--table-bg);
+      border-color: var(--border);
     }
-    #sidebar .nav-link.active {
-      background: #dee2e6;
-      font-weight: 500;
+    .modal-content{
+      background: var(--modal-bg) !important;
+      color: var(--modal-fg) !important;
+      border-color: var(--border) !important;
+    }
+    .dropdown-menu{
+      background: var(--dropdown-bg);
+      color: var(--dropdown-fg);
+      border-color: var(--border);
     }
 
-    /* ─── 메인 콘텐츠 ─── */
-    .main-content {
-      margin-left: 240px;         /* 사이드바 전체 너비만큼 여백 */
-      padding: 1rem 2rem;
-      transition: margin-left .3s ease;
-    }
-    /* 사이드바 접힐 때: 최소 너비(60px)만큼만 여백 */
-    .main-content.expanded {
-      margin-left: 60px;
+    /* 배지/칩 */
+    .badge, .chip{
+      background: var(--chip-bg) !important;
+      color: var(--fg) !important;
+      border: 1px solid var(--border) !important;
     }
 
-    /* ─── 로딩 오버레이 ─── */
+    /* 버튼(아웃라인이 다크에서 묻히는 문제 방지) */
+    .btn-outline-secondary, .btn-outline-dark{
+      color: var(--fg) !important;
+      border-color: var(--border) !important;
+    }
+
+    /* =========================
+       6) 로딩 오버레이 + 커스텀 로더
+       ========================= */
     #loadingOverlay {
-      display: none;              /* 기본 숨김 */
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
+      display: none; position: fixed; inset: 0;
       background: rgba(0, 0, 0, 0.6);
-      z-index: 5000;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      color: #ffffff;
-      text-align: center;
-      padding: 1rem;
+      z-index: 5000; align-items: center; justify-content: center; flex-direction: column;
+      color: #ffffff; text-align: center; padding: 1rem;
     }
-    /* 사용자 정의 로더 스타일 */
     .loader {
-      width: 50px;
-      --b: 8px; 
-      aspect-ratio: 1;
-      border-radius: 50%;
-      padding: 1px;
+      width: 50px; --b: 8px; aspect-ratio: 1; border-radius: 50%; padding: 1px;
       background: conic-gradient(#0000 10%, #f03355) content-box;
       -webkit-mask:
         repeating-conic-gradient(#0000 0deg, #000 1deg 20deg, #0000 21deg 36deg),
         radial-gradient(farthest-side, #0000 calc(100% - var(--b) - 1px), #000 calc(100% - var(--b)));
-      -webkit-mask-composite: destination-in;
-              mask-composite: intersect;
+      -webkit-mask-composite: destination-in; mask-composite: intersect;
       animation: l4 1s infinite steps(10);
     }
-    @keyframes l4 {
-      to { transform: rotate(1turn); }
-    }
-    .loading-text {
-      font-size: 1.25rem;
-      margin-top: 1rem;
-      margin-bottom: 0.5rem;
-    }
-    .loading-index {
-      font-size: 1rem;
-      opacity: 0.8;
-    }
+    @keyframes l4 { to { transform: rotate(1turn); } }
+    .loading-text { font-size: 1.25rem; margin-top: 1rem; margin-bottom: .5rem; }
+    .loading-index { font-size: 1rem; opacity: .8; }
 
-    .main-content.no-sidebar {
-    margin-left: 0 !important;
-    }
+    /* 다크모드에서 닫기(X) 아이콘 보이게 */
+body.dark-mode .btn-close{
+  filter: invert(1) grayscale(100%) brightness(1.2); /* 검정 SVG → 흰색처럼 보이게 */
+  opacity: .9;
+}
+body.dark-mode .btn-close:hover{
+  opacity: 1;
+}
 
-    /* ─── (필요 시 모달/토스트/기타 공통 스타일 추가) ─── */
+/* 모달 헤더/바디 경계선도 다크 대비 맞춤 */
+body.dark-mode .modal-header,
+body.dark-mode .modal-footer{
+  border-color: var(--border) !important;
+}
+
+/* (선택) 모달 타이틀 색 정렬 */
+body.dark-mode .modal-title{
+  color: var(--modal-fg) !important;
+}
   </style>
 
   {% block head %}{% endblock %}
@@ -316,51 +377,63 @@
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-  <script>
+ <script>
     // ─── 사이드바 토글 (요소가 있을 때만) ───
     (function () {
       const btn = document.getElementById('toggleSidebar');
-      if (!btn) return; // hide_sidebar=True 일 때 에러 방지
-
+      if (!btn) return;
       btn.addEventListener('click', function () {
         const sidebar = document.getElementById('sidebar');
         const content = document.getElementById('contentArea');
         const icon = this.querySelector('i');
-
         sidebar.classList.toggle('collapsed');
         content.classList.toggle('expanded');
-
         if (sidebar.classList.contains('collapsed')) {
-          icon.classList.remove('fa-chevron-left');
-          icon.classList.add('fa-chevron-right');
+          icon.classList.replace('fa-chevron-left', 'fa-chevron-right');
         } else {
-          icon.classList.remove('fa-chevron-right');
-          icon.classList.add('fa-chevron-left');
+          icon.classList.replace('fa-chevron-right', 'fa-chevron-left');
         }
       });
     })();
 
-    // ─── 다크 모드 토글 ───
-    document.getElementById('darkModeToggle').addEventListener('click', function () {
-      document.body.classList.toggle('dark-mode');
-      const moonSun = this.querySelector('i');
-      moonSun.classList.toggle('fa-moon');
-      moonSun.classList.toggle('fa-sun');
-    });
+    // ─── 다크 모드 토글 + 저장 ───
+    (function(){
+      const KEY = 'app.theme';
+      const body = document.body;
+      const btn  = document.getElementById('darkModeToggle');
+      // 저장된 테마 복원
+      const saved = localStorage.getItem(KEY);
+      if (saved === 'dark') body.classList.add('dark-mode');
+
+      btn.addEventListener('click', function () {
+        body.classList.toggle('dark-mode');
+        const now = body.classList.contains('dark-mode') ? 'dark' : 'light';
+        localStorage.setItem(KEY, now);
+        const icon = this.querySelector('i');
+        icon.classList.toggle('fa-moon');
+        icon.classList.toggle('fa-sun');
+      });
+
+      // 초기 아이콘 상태 동기화
+      const icon = btn.querySelector('i');
+      if (body.classList.contains('dark-mode')) {
+        icon.classList.remove('fa-moon'); icon.classList.add('fa-sun');
+      } else {
+        icon.classList.remove('fa-sun'); icon.classList.add('fa-moon');
+      }
+    })();
 
     function showLoading(message = '') {
       const overlay = document.getElementById('loadingOverlay');
       const msgEl   = document.getElementById('loadingMessage');
-      msgEl.innerText = message;
+      msgEl.innerText = message || '로딩 중입니다...';
       overlay.style.display = 'flex';
     }
-    function hideLoading() { document.getElementById('loadingOverlay').style.display = 'none'; }
+    function hideLoading(){ document.getElementById('loadingOverlay').style.display = 'none'; }
 
-    // ─── 폼 제출 시 로딩 ───
+    // 폼 제출 시 로딩
     document.querySelectorAll('form.loading-form').forEach(form => {
-      form.addEventListener('submit', function () {
-        showLoading('문제 생성중입니다...');
-      });
+      form.addEventListener('submit', () => showLoading('문제 생성중입니다...'));
     });
 
     // 페이지 로드 후 로딩 오버레이 숨김
