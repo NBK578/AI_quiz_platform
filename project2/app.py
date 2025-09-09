@@ -5,152 +5,162 @@ import random
 import re
 import concurrent.futures
 import logging
-import re
-import os
+from functools import wraps
+from pathlib import Path
+
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 os.environ["OAUTHLIB_RELAX_TOKEN_SCOPE"] = "1"
 
-from flask import Flask, render_template, request, redirect, url_for, session, send_file, flash
+from flask import (
+    Flask, render_template, request, redirect, url_for,
+    session, send_file, flash, send_from_directory, current_app
+)
 from werkzeug.utils import secure_filename
+
+# ✅ models.py에서 만든 '하나뿐인' db 객체 import (새로 만들지 않음)
 from models import db, User, Quiz, Question, Choice, UserAnswer, Video
 
 import openai
 import fitz  # PyMuPDF
 import pytesseract
 from PIL import Image
+from dotenv import load_dotenv
 
-# --- Flask-Dance를 통한 구글 OAuth 도입 ---
+# 로드 .env
+load_dotenv(dotenv_path=Path(__file__).resolve().parents[1] / ".env", override=True)
+
+# 로깅
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+
+# OAuth / 기타 블루프린트
 from flask_dance.contrib.google import make_google_blueprint, google
 from youtube_routes import youtube_bp
-from youtube_utils import youtube_to_pdf            # ← 이 줄 추가
+from youtube_utils import youtube_to_pdf
+from debate_routes import debate_bp
 
-from debate_routes import debate_bp 
+# 설정 클래스
+from config import DevConfig, ProdConfig
 
+# -----------------------------
+# Flask 앱 생성 및 설정
+# -----------------------------
+load_dotenv()
 
+pwd = os.getenv("DB_PASSWORD")
+print("[DB CHECK]",
+      "USER=", repr(os.getenv("DB_USER")),
+      "HOST=", repr(os.getenv("DB_HOST")),
+      "PORT=", repr(os.getenv("DB_PORT")),
+      "NAME=", repr(os.getenv("DB_NAME")),
+      "PWD_LEN=", 0 if pwd is None else len(pwd),
+      "PWD_TAIL=", "" if not pwd else repr(pwd[-3:]))  # 마지막 3글자만 확인
+
+app = Flask(__name__)
+app.secret_key = os.getenv("FLASK_SECRET_KEY", "replace_me")
+
+# 환경 선택
+env_name = os.getenv("FLASK_ENV", "development").lower()
+Config = ProdConfig if env_name.startswith("prod") else DevConfig
+app.config.from_object(Config)
+
+# 커넥션 풀 옵션(선택)
+app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+    "pool_size": Config.POOL_SIZE,
+    "pool_timeout": Config.POOL_TIMEOUT,
+    "pool_recycle": Config.POOL_RECYCLE,
+    "pool_pre_ping": True,
+}
+
+# ✅ 여기서 models.py의 db 인스턴스를 '이 app'에 붙임
+db.init_app(app)
+
+# 최초 테이블 생성(개발용)
+with app.app_context():
+    db.create_all()
+
+# -----------------------------
+# 블루프린트 등록
+# -----------------------------
 google_bp = make_google_blueprint(
-    client_id="Your_Client_ID",
-    client_secret="Your_Client_Secret",
-       scope=[
+    client_id=os.getenv("GOOGLE_CLIENT_ID", ""),
+    client_secret=os.getenv("GOOGLE_CLIENT_SECRET", ""),
+    scope=[
         "openid",
         "https://www.googleapis.com/auth/userinfo.email",
         "https://www.googleapis.com/auth/userinfo.profile",
     ],
-    redirect_to="google_login"
+    redirect_to="google_login",
 )
-app = Flask(__name__)
-app.secret_key = "비밀키를_여기에_입력하세요"
-
-app.register_blueprint(youtube_bp)
-app.register_blueprint(debate_bp)         # ← Debate 탭 등록
-
 app.register_blueprint(google_bp, url_prefix="/login")
-# ------------------------------------------
-
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
-
-# -----------------------
-# Database Configuration
-# -----------------------
-# PostgreSQL connection URI (update with actual credentials)
-app.config['SQLALCHEMY_DATABASE_URI']        = "your_information"
-# Disable track modifications for performance
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-# Initialize SQLAlchemy with app
-db.init_app(app)
-# Create tables if they don't exist (only for development)
-with app.app_context():
-    db.create_all()
-
-
-# OpenAI API 및 Tesseract 경로 설정
-openai.api_key = "your_secret_number"
-pytesseract.pytesseract.tesseract_cmd = r"C:\Users\USER\Desktop\2024\tesseract.exe"
-
-
-
-# 업로드된 JSON 파일들
-UPLOAD_FOLDER = os.path.join(app.root_path, 'uploads')
-# 쇼츠 동영상들이 저장된 디렉터리
-OUTPUT_DIR   = os.path.join(app.static_folder, 'output')
-
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
-
-
-
-ALLOWED_EXTENSIONS = {".pdf", ".png", ".jpg", ".jpeg"}
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-os.makedirs(OUTPUT_DIR, exist_ok=True)
-# 사용 가능한 문제 유형
-AVAILABLE_TYPES = ["객관식", "빈칸 채우기", "OX문제", "주관식", "서술형"]
-
-from generate_quiz_video import create_shorts_from_json
+app.register_blueprint(youtube_bp)
+app.register_blueprint(debate_bp)
 
 # -----------------------
 # Google Login Route
 # -----------------------
 @app.route("/google_login")
 def google_login():
-    """
-    Google OAuth 콜백 후 사용자 정보 조회 → 사용자 생성/조회 → 세션 저장.
-    """
+    """Google OAuth 콜백 후 사용자 정보 조회 → 사용자 생성/조회 → 세션 저장."""
     if not google.authorized:
         return redirect(url_for("google.login"))
 
     resp = google.get("/oauth2/v2/userinfo")
     if not resp or not resp.ok:
-        flash("구글 사용자 정보를 가져올 수 없습니다.")
+        flash("구글 사용자 정보를 가져올 수 없습니다.", "danger")
         return redirect(url_for("index"))
 
     info = resp.json() or {}
     google_uid = info.get("id") or info.get("sub")
     if not google_uid:
-        flash("구글 사용자 ID를 확인할 수 없습니다.")
+        flash("구글 사용자 ID를 확인할 수 없습니다.", "danger")
         return redirect(url_for("index"))
 
-    # Lookup existing user by Google ID
     user = User.query.filter_by(google_id=google_uid).first()
-    # If not found, create a new User record
     if not user:
         user = User(
             google_id=google_uid,
-            email=info.get('email'),
-            name=info.get('name')
+            email=info.get("email"),
+            name=info.get("name") or info.get("email"),
         )
         db.session.add(user)
         db.session.commit()
 
-    # Store user ID in session for later use
-    session['user_id'] = user.user_id
+    session.permanent = True
+    session["user_id"] = user.user_id
+    session["user_name"] = user.name
+    flash(f"{user.name}님, 로그인되었습니다.", "success")
     return redirect(url_for("index"))
 
-# 템플릿 어디서나 current_user 사용 가능하도록 주입
+
+@app.route("/logout")
+def logout():
+    session.pop("google_oauth_token", None)
+    session.pop("user_id", None)
+    session.pop("user_name", None)
+    flash("로그아웃되었습니다.", "info")
+    return redirect(url_for("index"))
+
+
+# 템플릿 어디서나 current_user 사용
 @app.context_processor
 def inject_current_user():
     uid = session.get("user_id")
     user = User.query.get(uid) if uid else None
     return {"current_user": user}
 
-# 로그아웃: 토큰/세션 정리
-@app.route("/logout")
-def logout():
-    session.pop("google_oauth_token", None)
-    session.pop("user_id", None)
-    return redirect(url_for("index"))
 
 # 로그인 필요 데코레이터
-
 def login_required(view):
     @wraps(view)
     def wrapper(*args, **kwargs):
         if not session.get("user_id"):
-            flash("로그인이 필요합니다.")
+            flash("로그인이 필요합니다.", "warning")
             return redirect(url_for("google.login"))
         return view(*args, **kwargs)
     return wrapper
 
-# 로그인 상태 확인용 디버그 엔드포인트
+
+# 디버그
 @app.route("/auth/debug")
 def auth_debug():
     try:
@@ -160,11 +170,48 @@ def auth_debug():
             r = google.get("/oauth2/v2/userinfo")
             if r and r.ok:
                 info = r.json()
-        return {"authorized": authed, "session_user_id": session.get("user_id"), "userinfo": info}, 200
+        return {
+            "authorized": authed,
+            "session_user_id": session.get("user_id"),
+            "userinfo": info,
+        }, 200
     except Exception as e:
         return {"authorized": False, "error": str(e)}, 500
 
+    
 
+# -----------------------------
+# OpenAI / Tesseract
+# -----------------------------
+openai.api_key = os.getenv("OPENAI_API_KEY", "")
+# 환경에 맞춰 경로 조정
+pytesseract.pytesseract.tesseract_cmd = os.getenv("TESSERACT_PATH", r"C:\tesseract\tesseract.exe")
+
+
+# -----------------------------
+# 업로드/출력 경로
+# -----------------------------
+UPLOAD_FOLDER = os.path.join(app.root_path, "uploads")
+OUTPUT_DIR = os.path.join(app.static_folder, "output")
+ALLOWED_EXTENSIONS = {".pdf", ".png", ".jpg", ".jpeg"}
+
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+
+# 사용 가능한 문제 유형(표시용 라벨)
+AVAILABLE_TYPES = ["객관식", "빈칸 채우기", "OX문제", "주관식", "서술형"]
+
+# 한글 라벨 ↔ DB 코드 매핑
+TYPE_MAP = {
+    "객관식": "multiple_choice",
+    "빈칸 채우기": "fill_blank",
+    "OX문제": "true_false",
+    "주관식": "short_answer",
+    "서술형": "descriptive",
+}
+REV_TYPE_MAP = {v: k for k, v in TYPE_MAP.items()}
+ALLOWED_DB_TYPES = set(TYPE_MAP.values())
 
 # ------------------------------
 # 고유 파일명 생성 함수
@@ -180,6 +227,15 @@ def get_unique_filename(base_name, tag="_문제", extension=".json", directory=U
 # ------------------------------
 # 중복 문제 제거 함수
 # ------------------------------
+def get_unique_filename(base_name, tag="_문제", extension=".json", directory=UPLOAD_FOLDER):
+    candidate = f"{base_name}{tag}{extension}"
+    counter = 1
+    while os.path.exists(os.path.join(directory, candidate)):
+        candidate = f"{base_name}{tag}({counter}){extension}"
+        counter += 1
+    return candidate
+
+
 def remove_duplicate_questions(questions):
     unique = {}
     for q in questions:
@@ -188,17 +244,46 @@ def remove_duplicate_questions(questions):
             unique[text] = q
     return list(unique.values())
 
+
 def clean_question_text(q_list):
-    """
-    q_list: [{'question_data': {'question': 'PDF 내용에 따르면…'}, …}, …]
-    """
-    pattern = re.compile(r'^(?:PDF 내용을? (?:바탕으로|에 따르면),?\s*)+', re.IGNORECASE)
+    pattern = re.compile(r"^(?:PDF 내용을? (?:바탕으로|에 따르면),?\s*)+", re.IGNORECASE)
     for q in q_list:
-        txt = q['question_data']['question']
-        # 접두사 매칭되는 부분 전부 삭제
-        cleaned = pattern.sub('', txt)
-        q['question_data']['question'] = cleaned
+        txt = q["question_data"]["question"]
+        cleaned = pattern.sub("", txt)
+        q["question_data"]["question"] = cleaned
     return q_list
+
+
+def allowed_file(filename):
+    return os.path.splitext(filename)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def map_type_to_db(label: str) -> str:
+    db_type = TYPE_MAP.get(label)
+    if not db_type:
+        raise ValueError(f"허용되지 않은 문제 유형: {label}")
+    return db_type
+
+
+def db_type_to_label(db_type: str) -> str:
+    return REV_TYPE_MAP.get(db_type, db_type)
+
+
+def to_int_or_none(v):
+    if v in (None, "", "null"):
+        return None
+    try:
+        return int(v)
+    except Exception:
+        return None
+
+
+def normalize_ox_choice(text: str) -> str:
+    t = str(text).strip().lower()
+    t = t.replace("옳", "o").replace("그", "x")
+    if t in ("o", "x"):
+        return t.upper()
+    return text.strip()
 
 # ------------------------------
 # 공통 API 호출 및 JSON 파싱 함수
@@ -215,6 +300,7 @@ def call_openai_chat_completion(messages, model="gpt-4", max_retries=5, delay=5)
         time.sleep(delay)
     raise Exception("OpenAI API 호출 최대 재시도 횟수를 초과하였습니다.")
 
+
 def generate_question_with_prompt(prompt: str) -> dict:
     messages = [{"role": "user", "content": prompt}]
     response = call_openai_chat_completion(messages)
@@ -223,6 +309,7 @@ def generate_question_with_prompt(prompt: str) -> dict:
         return json.loads(content)
     except json.JSONDecodeError:
         return {"원본": content}
+
 
 def parse_multiple_json(text: str):
     decoder = json.JSONDecoder()
@@ -243,35 +330,35 @@ def parse_multiple_json(text: str):
 # ------------------------------
 # PDF 및 이미지 처리 함수
 # ------------------------------
+def _extract_text_from_page(pdf_path: str, page_index: int) -> str:
+    doc = fitz.open(pdf_path)
+    text = doc[page_index].get_text()
+    doc.close()
+    return text or ""
+
+
 def extract_text_from_pdf_parallel(pdf_path_or_text: str, page_range: tuple = None) -> str:
     """
-    PDF 파일 경로이거나 이미 추출된 텍스트를 받아 처리합니다.
-    - 인자가 실제 파일 경로인 경우: fitz로 PDF를 열고 병렬로 페이지 텍스트를 추출
-    - 그 외(이미 텍스트가 전달된 경우): 그대로 반환
+    pdf_path_or_text가 실제 파일 경로면 PDF에서 추출,
+    순수 텍스트면 그대로 반환.
     """
-    # 1) 순수 텍스트가 넘어온 경우 그대로 반환sssssss
     if not os.path.isfile(pdf_path_or_text):
-        return pdf_path_or_text
+        return pdf_path_or_text  # 이미 텍스트
 
-    # 2) 실제 파일 경로인 경우 기존 병렬 추출 로직 실행
     pdf_path = pdf_path_or_text
     try:
-        # 전체 페이지 수 확인
         doc = fitz.open(pdf_path)
         total_pages = len(doc)
         doc.close()
 
-        # 페이지 범위 계산 (1-indexed 입력 → 0-indexed 내부 처리)
         start_page, end_page = (0, total_pages)
         if page_range:
             start_page = max(0, page_range[0] - 1)
-            end_page   = min(total_pages, page_range[1])
-
+            end_page = min(total_pages, page_range[1])
         if start_page < 0 or end_page > total_pages or start_page >= end_page:
-            logging.warning("페이지 범위가 전체 페이지 수를 벗어났습니다. 전체 페이지 사용합니다.")
+            logging.warning("페이지 범위가 유효하지 않아 전체 사용")
             start_page, end_page = 0, total_pages
 
-        # 병렬로 페이지별 추출
         texts = []
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures = [
@@ -280,21 +367,14 @@ def extract_text_from_pdf_parallel(pdf_path_or_text: str, page_range: tuple = No
             ]
             for future in concurrent.futures.as_completed(futures):
                 texts.append(future.result())
-
         combined_text = "\n".join(texts).strip()
         if not combined_text:
             raise Exception("PDF에서 추출된 텍스트가 없습니다.")
         return combined_text
-
     except Exception as e:
         logging.error(f"PDF 텍스트 추출 실패: {e}")
         raise
 
-def _extract_text_from_page(pdf_path: str, page_index: int) -> str:
-    doc = fitz.open(pdf_path)
-    text = doc[page_index].get_text()
-    doc.close()
-    return text or ""
 
 def analyze_image_content(image_path: str) -> str:
     try:
@@ -305,7 +385,8 @@ def analyze_image_content(image_path: str) -> str:
         ocr_text = ""
     if ocr_text:
         prompt = (
-            "아래 OCR 결과를 기반으로, 이 이미지의 주요 내용, 분위기, 사용된 기법, 그리고 작가의 의도를 자세하게 설명하는 캡션을 작성해 주세요.\n\n"
+            "아래 OCR 결과를 기반으로, 이 이미지의 주요 내용, 분위기, 사용된 기법, "
+            "그리고 작가의 의도를 자세하게 설명하는 캡션을 작성해 주세요.\n\n"
             f"OCR 결과:\n{ocr_text}"
         )
         response = generate_question_with_prompt(prompt)
@@ -314,6 +395,7 @@ def analyze_image_content(image_path: str) -> str:
     else:
         base = os.path.splitext(os.path.basename(image_path))[0]
         return f"이 이미지는 '{base}'라는 제목을 가진 이미지입니다. 추가적인 분석이 필요합니다."
+
 
 def truncate_text(text: str, max_word_count: int = 1500) -> str:
     words = text.split()
@@ -330,9 +412,10 @@ def generate_questions(prompt_template: str, source_text: str, count: int, diffi
         difficulty=difficulty,
         source_label=source_label,
         data_scope=data_scope,
-        source_for_prompt=source_for_prompt
+        source_for_prompt=source_for_prompt,
     )
     result = generate_question_with_prompt(prompt)
+
     questions = []
     if isinstance(result, list):
         questions = result
@@ -342,97 +425,89 @@ def generate_questions(prompt_template: str, source_text: str, count: int, diffi
             questions = parsed if parsed else [result]
         else:
             questions = [result]
+
     for q in questions:
         q["유형"] = qtype
         q.setdefault("page", None)
     return questions
 
-# 템플릿별 프롬프트 정의
+
+# 템플릿별 프롬프트 (객관식 예시 JSON 수정됨)
 PROMPT_TEMPLATES = {
     "객관식": (
         "아래 {source_label}(자료 범위: {data_scope})를 바탕으로, 객관식 문제를 총 {count}개 생성해 주세요.\n"
         "난이도: {difficulty}\n"
-        "각 문제의 선택지는 반드시 'A. 보기1', 'B. 보기2', 'C. 보기3', 'D. 보기4' 'E. 보기5'형식으로 표현되어야 하며, 정답은 해당 알파벳으로 표기되어야 합니다.\n"
+        "각 문제의 선택지는 반드시 'A. 보기1', 'B. 보기2', 'C. 보기3', 'D. 보기4', 'E. 보기5' 형식으로 표현하고, 정답은 해당 알파벳으로 표기하세요.\n"
         "출력은 반드시 JSON 배열 형식이어야 합니다.\n"
         "형식 예시:\n"
-        "[{{\"page\": null, \"유형\": \"객관식\", \"question_data\": {{\"question\": \"주제는?\", \"choices\": [\"A. 옵션1\", \"B. 옵션2\", \"C. 옵션3\", \"D. 옵션4\"], \"E. 옵션5\"],\"answer\": \"A\", \"explanation\": \"설명.\"}}}}]\n"
+        "[{{"
+        "\"page\": null, \"유형\": \"객관식\", "
+        "\"question_data\": {{"
+        "\"question\": \"주제는?\", "
+        "\"choices\": [\"A. 옵션1\", \"B. 옵션2\", \"C. 옵션3\", \"D. 옵션4\", \"E. 옵션5\"], "
+        "\"answer\": \"A\", "
+        "\"explanation\": \"설명.\""
+        "}}"
+        "}}]\n"
         "{source_label}:\n---\n{source_for_prompt}\n---"
     ),
     "빈칸 채우기": (
         "아래 {source_label}(자료 범위: {data_scope})를 바탕으로, 난이도 {difficulty}의 빈칸 채우기 문제를 총 {count}개 생성해 주세요.\n"
-        "문제는 간단한 단어 또는 짧은 구절 위주로 작성되어야 하며, 보기는 제공하지 말고 정답은 직접 입력하는 형태로 작성해 주세요.\n"
+        "보기는 제공하지 말고 정답은 직접 입력하는 형태로 작성하세요.\n"
         "출력은 반드시 JSON 배열 형식이어야 합니다.\n"
         "형식 예시:\n"
-        "[{{\"page\": null, \"유형\": \"빈칸 채우기\", \"question_data\": {{\"question\": \"주요 기술은 ______이다.\", \"answer\": \"옵션1\", \"explanation\": \"설명.\"}}}}]\n"
+        "[{{\"page\": null, \"유형\": \"빈칸 채우기\", "
+        "\"question_data\": {{\"question\": \"주요 기술은 ______이다.\", \"answer\": \"옵션1\", \"explanation\": \"설명.\"}}}}]\n"
         "{source_label}:\n---\n{source_for_prompt}\n---"
     ),
     "OX문제": (
         "아래 {source_label}(자료 범위: {data_scope})를 바탕으로, OX문제를 총 {count}개 생성해 주세요.\n"
         "난이도: {difficulty}\n"
-        "각 문제의 선택지는 반드시 [\"O\", \"X\"] 형식으로 제공되어야 하며, 정답은 O 또는 X로 표기되어야 합니다.\n"
+        "선택지는 반드시 [\"O\",\"X\"]이고 정답은 \"O\" 또는 \"X\"만 허용합니다.\n"
         "출력은 반드시 JSON 배열 형식이어야 합니다.\n"
         "형식 예시:\n"
-        "[{{\"page\": null, \"유형\": \"OX문제\", \"question_data\": {{\"question\": \"내용 일관성?\", \"choices\": [\"O\", \"X\"], \"answer\": \"O\", \"explanation\": \"설명.\"}}}}]\n"
+        "[{{\"page\": null, \"유형\": \"OX문제\", "
+        "\"question_data\": {{\"question\": \"내용 일관성?\", \"choices\": [\"O\",\"X\"], \"answer\": \"O\", \"explanation\": \"설명.\"}}}}]\n"
         "{source_label}:\n---\n{source_for_prompt}\n---"
     ),
     "주관식": (
         "아래 {source_label}(자료 범위: {data_scope})를 바탕으로, 주관식 문제를 총 {count}개 생성해 주세요.\n"
         "난이도: {difficulty}\n"
-        "주관식 문제는 정답이 한 단어 또는 짧은 구절로 작성되어야 합니다.\n"
         "출력은 반드시 JSON 배열 형식이어야 합니다.\n"
         "형식 예시:\n"
-        "[{{\"page\": null, \"유형\": \"주관식\", \"question_data\": {{\"question\": \"핵심 용어는?\", \"answer\": \"용어\", \"explanation\": \"설명.\"}}}}]\n"
+        "[{{\"page\": null, \"유형\": \"주관식\", "
+        "\"question_data\": {{\"question\": \"핵심 용어는?\", \"answer\": \"용어\", \"explanation\": \"설명.\"}}}}]\n"
         "{source_label}:\n---\n{source_for_prompt}\n---"
     ),
     "서술형": (
         "아래 {source_label}(자료 범위: {data_scope})를 바탕으로, 서술형 문제를 총 {count}개 생성해 주세요.\n"
         "난이도: {difficulty}\n"
-        "서술형 문제는 정답이 긴 문장이나 문단 형태로 작성되어야 합니다.\n"
         "출력은 반드시 JSON 배열 형식이어야 합니다.\n"
         "형식 예시:\n"
-        "[{{\"page\": null, \"유형\": \"서술형\", \"question_data\": {{\"question\": \"문서의 내용과 구조를 서술하시오.\", \"answer\": \"내용...\", \"explanation\": \"설명.\"}}}}]\n"
+        "[{{\"page\": null, \"유형\": \"서술형\", "
+        "\"question_data\": {{\"question\": \"문서의 내용과 구조를 서술하시오.\", \"answer\": \"내용...\", \"explanation\": \"설명.\"}}}}]\n"
         "{source_label}:\n---\n{source_for_prompt}\n---"
-    )
+    ),
 }
 
-def generate_questions_from_pdf(pdf_path: str,
-                                total_questions: int,
-                                difficulty: str,
-                                selected_types: list) -> list:
-    """
-    PDF 파일 경로(pdf_path)에서 페이지별 텍스트를 뽑은 뒤,
-    선택된 문제 유형(selected_types)을 순환하며 total_questions만큼
-    한 문제씩 생성합니다.
-    """
-    # 1) PDF 텍스트 통합 (페이지 정보는 q["page"]를 따로 채워도 되고)
+
+def generate_questions_from_pdf(pdf_path: str, total_questions: int, difficulty: str, selected_types: list) -> list:
     pdf_text = extract_text_from_pdf_parallel(pdf_path)
 
-    # 2) 순환할 타입 리스트 만들기
-    types_cycle = []
-    n_types = len(selected_types)
-    for i in range(total_questions):
-        types_cycle.append(selected_types[i % n_types])
+    # 선택 타입을 라운드로빈
+    types_cycle = [selected_types[i % len(selected_types)] for i in range(total_questions)]
 
     all_questions = []
     for ptype in types_cycle:
         template = PROMPT_TEMPLATES[ptype]
-        # 한 번에 한 문제씩만 생성
-        qs = generate_questions(template,
-                                pdf_text,
-                                count=1,
-                                difficulty=difficulty,
-                                data_scope="PDF",
-                                qtype=ptype)
+        qs = generate_questions(
+            template, pdf_text, count=1, difficulty=difficulty, data_scope="PDF", qtype=ptype
+        )
         if qs:
-            q = qs[0]
-            all_questions.append(q)
+            all_questions.append(qs[0])
 
-    # 3) 중복 제거 (혹시 같은 질문이 들어왔을 때)
     unique = remove_duplicate_questions(all_questions)
-    # 4) 총합이 모자라면(rare), 빈 유형으로 채워 넣거나 그대로 리턴
     return unique[:total_questions]
-
-
 
 
 def generate_questions_from_image(image_path: str, total_questions: int, difficulty: str, selected_types: list) -> list:
@@ -443,13 +518,12 @@ def generate_questions_from_image(image_path: str, total_questions: int, difficu
     remainder = total_questions % num_types
     distribution = {ptype: base_count for ptype in selected_types}
     if remainder:
-        extra = random.sample(selected_types, remainder)
-        for p in extra:
+        for p in random.sample(selected_types, remainder):
             distribution[p] += 1
     for ptype in selected_types:
         count = distribution[ptype]
         template = PROMPT_TEMPLATES.get(ptype)
-        qs = generate_questions(template, caption, count, difficulty, image_path, ptype)
+        qs = generate_questions(template, caption, count, difficulty, "IMAGE", ptype)
         all_questions.extend(qs)
     return remove_duplicate_questions(all_questions)[:total_questions]
 
@@ -458,13 +532,15 @@ def generate_questions_from_image(image_path: str, total_questions: int, difficu
 # ------------------------------
 def extract_choice_letter(ans: str) -> str:
     ans = ans.strip()
-    match = re.match(r'^([A-Za-z])[\.\)]', ans)
+    match = re.match(r"^([A-Za-z])[\.\)]", ans)
     if match:
         return match.group(1).lower()
     return ans.lower() if ans and ans.isalpha() else ans.lower()
 
+
 def normalize_objective_answer(ans: str) -> str:
-    return re.sub(r'^[a-z][\.\)]\s*', '', ans.strip().lower())
+    return re.sub(r"^[a-z][\.\)]\s*", "", ans.strip().lower())
+
 
 def is_objective_answer_correct(user_ans: str, ref_ans: str) -> bool:
     if extract_choice_letter(user_ans) == extract_choice_letter(ref_ans):
@@ -478,48 +554,37 @@ def is_objective_answer_correct(user_ans: str, ref_ans: str) -> bool:
     return False
 
 
-
-
 def grade_problem(question: dict, user_answer: str) -> dict:
     """
-    question: 원본 문제 dict, '유형'과 'question_data' 키가 포함됨
-    user_answer: 사용자가 제출한 답안
-    반환값: {
-      "question_data": {...},
-      "user_ans": 사용자 답안,
-      "result": "정답" 또는 "오답",
-      "feedback": 피드백 문자열,
-      "score": 정수 점수 (정답이면 AI 점수, 오답이어도 AI 점수),
-      "is_correct": True or False
-    }
+    question: {'유형': <한글 라벨 또는 DB코드>, 'question_data': {...}}
     """
-    q_type = question.get("유형", "")
+    q_type_raw = question.get("유형", "")
+    # DB코드가 들어와도 동작하도록 라벨로 보정
+    q_type = db_type_to_label(q_type_raw)
     q_data = question.get("question_data", {})
-    reference_answer = q_data.get("answer", "").strip()
+    reference_answer = (q_data.get("answer") or "").strip()
     explanation = (q_data.get("explanation") or "").strip()
 
-    # 객관식, OX, 빈칸 채우기
+    # 객관식/빈칸/OX
     if q_type in ["객관식", "빈칸 채우기", "OX문제"]:
         ua = user_answer.strip().lower()
         ra = reference_answer.lower()
 
-        # OX 문제: 한글 표현 허용
         if q_type == "OX문제":
             ua = ua.replace("옳", "o").replace("그", "x")
             ra = ra.replace("옳", "o").replace("그", "x")
 
         is_correct = (ua == ra)
-
         return {
             "question_data": q_data,
             "user_ans": user_answer,
             "result": "정답" if is_correct else "오답",
             "feedback": f"정답: {reference_answer}" if not is_correct else "정답입니다!",
             "score": 100 if is_correct else 0,
-            "is_correct": is_correct
+            "is_correct": is_correct,
         }
 
-    # 주관식, 서술형: AI 채점 결과 점수 그대로 반영
+    # 주관식/서술형: AI 채점
     prompt = (
         "너는 튜터 역할의 채점자입니다. 아래 문제와 참고 해설을 바탕으로, "
         "사용자 답안이 참고 해설과 얼마나 유사한지 평가하여 70% 이상의 유사도면 정답, "
@@ -535,54 +600,96 @@ def grade_problem(question: dict, user_answer: str) -> dict:
     if isinstance(ai_result, dict) and ai_result.get("result") in ["정답", "오답"]:
         is_correct = ai_result["result"] == "정답"
         ai_score = ai_result.get("score", 0)
-
         return {
             "question_data": q_data,
             "user_ans": user_answer,
             "result": ai_result["result"],
-            "feedback": ai_result.get("feedback", "").strip(),
-            "score": ai_score,  # ✅ 항상 AI 점수 그대로 사용
-            "is_correct": is_correct
+            "feedback": (ai_result.get("feedback") or "").strip(),
+            "score": ai_score,
+            "is_correct": is_correct,
         }
 
-    # AI 실패 시
     return {
         "question_data": q_data,
         "user_ans": user_answer,
         "result": "오답",
         "feedback": f"정답: {reference_answer}" if reference_answer else "오답",
         "score": 0,
-        "is_correct": False
+        "is_correct": False,
     }
 
 # ------------------------------
-# 단일 파일 업로드 (기존) 라우트
+# 라우트 (화면)
 # ------------------------------
-def allowed_file(filename):
-    return os.path.splitext(filename)[1].lower() in ALLOWED_EXTENSIONS
-
 @app.route("/")
 def index():
     return render_template("index.html", available_types=AVAILABLE_TYPES)
+
 
 @app.route("/create")
 def create():
     return render_template("create.html", available_types=AVAILABLE_TYPES)
 
+
+# ------------------------------
+# DB 저장용 정규화
+# ------------------------------
+def normalize_question_for_db(q: dict) -> dict:
+    """
+    입력: {'유형': '빈칸 채우기', 'page': '18', 'question_data': {...}}
+    출력: {'type': 'fill_blank', 'page': 18, 'question_text': ..., 'answer': ..., 'explanation': ..., 'choices': [...]}
+    """
+    if not q or "question_data" not in q:
+        raise ValueError("문항 데이터 형식이 올바르지 않습니다.")
+
+    data = q["question_data"]
+    q_type_db = map_type_to_db(q.get("유형"))
+    page = to_int_or_none(q.get("page"))
+
+    question_text = (data.get("question") or "").strip()
+    answer = (data.get("answer") or "").strip()
+    explanation = data.get("explanation") or None
+
+    if q_type_db in ("multiple_choice", "true_false"):
+        choices = data.get("choices") or []
+        if q_type_db == "true_false":
+            choices = [normalize_ox_choice(c) for c in choices] or ["O", "X"]
+            answer = normalize_ox_choice(answer)
+        if not choices:
+            raise ValueError("객관식/OX는 choices가 필요합니다.")
+    else:
+        choices = []
+
+    if not question_text:
+        raise ValueError("문항 본문이 비었습니다.")
+    if q_type_db != "descriptive" and not answer:
+        raise ValueError("정답이 비었습니다.")
+
+    return {
+        "type": q_type_db,
+        "page": page,
+        "question_text": question_text,
+        "answer": answer,
+        "explanation": explanation,
+        "choices": choices,
+    }
+
+
+
+# ------------------------------
+# 단일 파일 업로드 → 생성 → DB 저장
+# ------------------------------
 @app.route("/generate", methods=["POST"])
+@login_required
 def generate():
-    """
-    Handles file upload (PDF/image), generates questions via OpenAI, and persists Quiz + Questions + Choices to DB.
-    """
-    file = request.files.get('file')
+    file = request.files.get("file")
     if not file or file.filename == "":
-        flash("파일이 선택되지 않았습니다.")
+        flash("파일이 선택되지 않았습니다.", "warning")
         return redirect(request.url)
 
-    # Validate file extension
     ext = os.path.splitext(file.filename)[1].lower()
     if ext not in ALLOWED_EXTENSIONS:
-        flash("지원되지 않는 파일 형식입니다.")
+        flash("지원되지 않는 파일 형식입니다.", "danger")
         return redirect(request.url)
 
     # Save uploaded file
@@ -591,236 +698,246 @@ def generate():
     file.save(filepath)
 
     # Parse form inputs
-    total_q   = int(request.form.get('total_questions', 9))
-    difficulty = request.form.get('difficulty', '보통')
-    selected   = request.form.getlist('question_types') or available_types.copy()
+    total_q = int(request.form.get("total_questions", 9))
+    difficulty = request.form.get("difficulty", "보통")
+    selected = request.form.getlist("question_types") or AVAILABLE_TYPES.copy()
 
-    # Generate questions from PDF or image
+    # Generate questions
     try:
-        if ext == '.pdf':
+        if ext == ".pdf":
             questions = generate_questions_from_pdf(filepath, total_q, difficulty, selected)
         else:
             questions = generate_questions_from_image(filepath, total_q, difficulty, selected)
     except Exception as e:
-        flash(str(e))
-        return redirect(url_for('index'))
+        flash(f"문제 생성 실패: {e}", "danger")
+        return redirect(url_for("index"))
 
-    # Persist Quiz record
-    quiz = Quiz(user_id=session.get('user_id'), name=filename)
-    db.session.add(quiz)
-    db.session.flush()  # Assign quiz.quiz_id
+    # === 트랜잭션 저장 ===
+    try:
+        quiz = Quiz(user_id=session.get("user_id"), name=filename)
+        db.session.add(quiz)
+        db.session.flush()  # quiz_id 확보
 
-    # Persist Questions and Choices
-    question_ids = []
-    for q in questions:
-        data = q['question_data']
-        q_rec = Question(
-            quiz_id=quiz.quiz_id,
-            type=q['유형'],
-            page=q.get('page'),
-            question_text=data['question'],
-            answer=data['answer'],
-            explanation=data.get('explanation')
-        )
-        db.session.add(q_rec)
-        db.session.flush()  # Assign question_id
-        question_ids.append(q_rec.question_id)
-        # Save each choice for 객관식/OX
-        for choice_text in data.get('choices', []):
-            letter = choice_text.split('.')[0].strip()
-            choice = Choice(
-                question_id=q_rec.question_id,
-                letter=letter,
-                text=choice_text
+        question_ids = []
+        for q in questions:
+            nq = normalize_question_for_db(q)  # ★ 한글 라벨 → DB 코드 + 검증
+
+            q_rec = Question(
+                quiz_id=quiz.quiz_id,
+                type=nq["type"],
+                page=nq["page"],
+                question_text=nq["question_text"],
+                answer=nq["answer"],
+                explanation=nq["explanation"],
             )
-            db.session.add(choice)
+            db.session.add(q_rec)
+            db.session.flush()
+            question_ids.append(q_rec.question_id)
 
-    # Commit all DB changes
-    db.session.commit()
+            # 선택지 저장 (객관식/OX)
+            for choice_text in nq["choices"]:
+                raw = choice_text.strip()
+                # "A. 보기1" / "A) 보기1" → A
+                letter = raw.split(".")[0].split(")")[0].strip().upper()
+                if len(letter) != 1 or not letter.isalpha():
+                    letter = None  # DB 제약에 맞게 필요 시 Nullable이어야 함
+                db.session.add(Choice(question_id=q_rec.question_id, letter=letter, text=raw))
 
-    # Store quiz and question IDs in session for solving flow
-    session['quiz_id'] = quiz.quiz_id
-    session['question_ids'] = question_ids
+        db.session.commit()
 
-    return redirect(url_for('solve', q=0))
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.exception("저장 중 오류")
+        flash(f"저장 중 오류: {e}", "danger")
+        return redirect(url_for("index"))
+
+    # 풀이 플로우를 DB 기반으로 진행
+    session["quiz_id"] = quiz.quiz_id
+    session["question_ids"] = question_ids
+    # 결과 JSON도 세션에 저장(선택)
+    base = os.path.splitext(filename)[0]
+    gen_file = get_unique_filename(base)
+    session["generated_file"] = gen_file
+    out_path = os.path.join(app.config["UPLOAD_FOLDER"], gen_file)
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(questions, f, ensure_ascii=False, indent=4)
+
+    return redirect(url_for("solve", q=0))
 
 
+# ------------------------------
+# YouTube → PDF → 생성 (세션 기반)
+# ------------------------------
 @app.route("/youtube_generate", methods=["POST"])
 def youtube_generate():
     youtube_url = request.form.get("youtube_url", "").strip()
     if not youtube_url:
-        flash("유튜브 링크를 입력해주세요.")
+        flash("유튜브 링크를 입력해주세요.", "warning")
         return redirect(url_for("create"))
 
     try:
-        # 1) PDF 생성
         pdf_path, pdf_filename = youtube_to_pdf(youtube_url)
-        # 2) 텍스트 추출 & 질문 생성
         questions = generate_questions_from_pdf(
             pdf_path,
             int(request.form.get("total_questions", 9)),
             request.form.get("difficulty", "보통"),
-            request.form.getlist("question_types") or AVAILABLE_TYPES.copy()
+            request.form.getlist("question_types") or AVAILABLE_TYPES.copy(),
         )
-        # 3) 세션·파일 저장 (기존 generate 로직과 동일)
-        session["questions"]      = questions
+        session["questions"] = questions
         base = os.path.splitext(pdf_filename)[0]
         gen_file = get_unique_filename(base)
         session["generated_file"] = gen_file
-        session["answers"]        = {}
+        session["answers"] = {}
         out_path = os.path.join(app.config["UPLOAD_FOLDER"], gen_file)
         with open(out_path, "w", encoding="utf-8") as f:
             json.dump(questions, f, ensure_ascii=False, indent=4)
-
         return redirect(url_for("solve", q=0))
     except Exception as e:
-        flash(f"YouTube 기반 질문 생성 실패: {e}")
+        flash(f"YouTube 기반 질문 생성 실패: {e}", "danger")
         return redirect(url_for("create"))
-
+    
 # ------------------------------
-# 다중 파일 업로드 및 문제 생성 라우트
+# 다중 파일 업로드 (세션 기반)
 # ------------------------------
 @app.route("/multi_create")
 def multi_create():
     return render_template("multi_create.html", available_types=AVAILABLE_TYPES)
 
+
 @app.route("/multi_generate", methods=["POST"])
 def multi_generate():
     files = request.files.getlist("files")
-    if not files or len(files) == 0:
-        flash("파일이 선택되지 않았습니다.")
+    if not files:
+        flash("파일이 선택되지 않았습니다.", "warning")
         return redirect(request.url)
+
     texts = []
     for file in files:
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
             file.save(filepath)
             ext = os.path.splitext(filepath)[1].lower()
             try:
                 if ext == ".pdf":
                     text = extract_text_from_pdf_parallel(filepath)
-                    texts.append(text)
                 else:
                     text = analyze_image_content(filepath)
-                    texts.append(text)
+                texts.append(text)
             except Exception as e:
-                flash(f"{filename} 처리 중 오류: {e}")
-                continue
+                flash(f"{filename} 처리 중 오류: {e}", "danger")
         else:
-            flash("지원되지 않는 파일 형식입니다.")
+            flash("지원되지 않는 파일 형식입니다.", "warning")
+
     if not texts:
-        flash("업로드된 파일에서 추출된 텍스트가 없습니다.")
+        flash("업로드된 파일에서 추출된 텍스트가 없습니다.", "warning")
         return redirect(url_for("multi_create"))
+
     combined_text = "\n".join(texts)
     try:
         total_questions = int(request.form.get("total_questions", "9"))
     except ValueError:
         total_questions = 9
     difficulty = request.form.get("difficulty", "보통")
-    selected_types = request.form.getlist("question_types")
-    if not selected_types:
-        selected_types = AVAILABLE_TYPES.copy()
+    selected_types = request.form.getlist("question_types") or AVAILABLE_TYPES.copy()
+
     questions = generate_questions_from_pdf(combined_text, total_questions, difficulty, selected_types)
     session["questions"] = questions
-    session["answers"] = {}  # 단계별 풀이용 초기화
+    session["answers"] = {}
     base_name = f"multi_{int(time.time())}"
     session["generated_file"] = get_unique_filename(base_name)
-    output_path = os.path.join(app.config['UPLOAD_FOLDER'], session["generated_file"])
-    with open(output_path, 'w', encoding='utf-8') as f:
+    output_path = os.path.join(app.config["UPLOAD_FOLDER"], session["generated_file"])
+    with open(output_path, "w", encoding="utf-8") as f:
         json.dump(questions, f, ensure_ascii=False, indent=4)
     return redirect(url_for("solve", q=0))
 
+
 # ------------------------------
-# 저장된 문제 세트 선택 및 재문제 생성 라우트
+# 재문제 생성 (세션 기반)
 # ------------------------------
 @app.route("/recreate", methods=["GET", "POST"])
 def recreate():
     if request.method == "GET":
-        # 저장된 JSON 파일 목록 표시
         files = [f for f in os.listdir(UPLOAD_FOLDER) if f.endswith("_문제.json")]
-        return render_template(
-            "recreate.html",
-            files=files,
-            available_types=AVAILABLE_TYPES
-        )
+        return render_template("recreate.html", files=files, available_types=AVAILABLE_TYPES)
     else:
-        # 클라이언트가 선택한 파일들 로드
         selected_files = request.form.getlist("selected_files")
         if not selected_files:
-            flash("선택된 파일이 없습니다.")
+            flash("선택된 파일이 없습니다.", "warning")
             return redirect(url_for("recreate"))
 
         combined_texts = []
         for filename in selected_files:
             filepath = os.path.join(UPLOAD_FOLDER, filename)
             try:
-                with open(filepath, 'r', encoding='utf-8') as f:
+                with open(filepath, "r", encoding="utf-8") as f:
                     data = json.load(f)
                     for question in data:
                         q_text = question.get("question_data", {}).get("question", "")
                         if q_text:
                             combined_texts.append(q_text)
             except Exception as e:
-                flash(f"{filename} 처리 중 오류: {e}")
-                continue
+                flash(f"{filename} 처리 중 오류: {e}", "danger")
 
         if not combined_texts:
-            flash("선택된 파일들에서 추출할 질문이 없습니다.")
+            flash("선택된 파일들에서 추출할 질문이 없습니다.", "warning")
             return redirect(url_for("recreate"))
 
-        # 텍스트 결합 및 프롬프트 추가
-        combined_text = "\n".join(combined_texts)
-        combined_text = (
-            "다음 문제들을 참고하여, 동일한 내용이 중복되지 않고 새로운 관점에서 문제를 생성해 주세요.\n"
-            + combined_text
-        )
+        combined_text = "다음 문제들을 참고하여, 동일한 내용이 중복되지 않고 새로운 관점에서 문제를 생성해 주세요.\n" + "\n".join(combined_texts)
 
-        # 사용자 옵션 파싱
         try:
             total_questions = int(request.form.get("total_questions", "9"))
         except ValueError:
             total_questions = 9
         difficulty = request.form.get("difficulty", "보통")
-        selected_types = request.form.getlist("question_types")
-        if not selected_types:
-            selected_types = AVAILABLE_TYPES.copy()
+        selected_types = request.form.getlist("question_types") or AVAILABLE_TYPES.copy()
 
-        # PDF vs. 문자열 자동 분기 처리
         source_text = extract_text_from_pdf_parallel(combined_text)
-
-        # 질문 생성
-        new_questions = generate_questions_from_pdf(
-            source_text,
-            total_questions,
-            difficulty,
-            selected_types
-        )
+        new_questions = generate_questions_from_pdf(source_text, total_questions, difficulty, selected_types)
         new_questions = clean_question_text(new_questions)
-        # 생성된 질문/답안 세션에 저장
         session["questions"] = new_questions
-        session["answers"]   = {}
-        
-        # 결과 JSON 파일 저장
+        session["answers"] = {}
+
         base_name = f"recreate_{int(time.time())}"
         session["generated_file"] = get_unique_filename(base_name)
         output_path = os.path.join(UPLOAD_FOLDER, session["generated_file"])
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             json.dump(new_questions, f, ensure_ascii=False, indent=4)
 
         return redirect(url_for("solve", q=0))
 
 
 # ------------------------------
-# 단계별 문제 풀이 라우트 (한 문제씩 풀기)
+# 단계별 문제 풀이 (세션 기반)
 # ------------------------------
 @app.route("/solve", methods=["GET", "POST"])
 def solve():
-    # 새롭게 들어올 때마다 이전 채점 결과 삭제
     session.pop("grading_results", None)
+    # 세션 기반 풀이(YouTube/다중 업로드/재생성 플로우)
     questions = session.get("questions", [])
+    if not questions and session.get("question_ids"):
+        # DB 저장 플로우에서 바로 solve로 온 경우: DB에서 불러서 표시용 구조로 변환
+        q_ids = session.get("question_ids", [])
+        loaded = []
+        for qid in q_ids:
+            q = Question.query.get(qid)
+            if not q:
+                continue
+            loaded.append({
+                "유형": db_type_to_label(q.type),   # DB코드 → 한글 라벨
+                "page": q.page,
+                "question_data": {
+                    "question": q.question_text,
+                    "answer": q.answer,
+                    "explanation": q.explanation,
+                    "choices": [c.text for c in q.choices],
+                }
+            })
+        questions = loaded
+        session["questions"] = questions
+
     if not questions:
-        flash("문제가 존재하지 않습니다.")
+        flash("문제가 존재하지 않습니다.", "info")
         return redirect(url_for("index"))
 
     total = len(questions)
@@ -836,13 +953,11 @@ def solve():
         session["answers"] = answers
 
         q_index += 1
-        # 마지막 문제까지 다 풀었으면 grade로 이동
         if q_index >= total:
             return redirect(url_for("grade"))
         else:
             return redirect(url_for("solve", q=q_index))
 
-    # GET: 현재 문제 보여주기
     current_question = questions[q_index]
     progress = f"문제 {q_index+1}/{total}"
     return render_template(
@@ -851,53 +966,52 @@ def solve():
         progress=progress,
         q_index=q_index,
         total=total,
-        hide_sidebar=True
+        hide_sidebar=True,
     )
 
+
 # ------------------------------
-# 단계별 채점 결과 라우트
+# 전체 채점 (DB 기반 저장 플로우)
 # ------------------------------
-@app.route('/grade_step/<int:q_idx>', methods=['GET', 'POST'])
-def grade_step(q_idx):
-    """
-    한 문제씩 풀이하고 채점한 뒤, 다음 문제로 이동시키는 흐름.
-    q_idx: 0부터 시작하는 문항 인덱스
-    """
-    questions = session.get('questions', [])
-    if q_idx < 0 or q_idx >= len(questions):
-        return redirect(url_for('grade'))
+@app.route("/grade", methods=["GET"])
+def grade():
+    q_ids = session.get("question_ids", [])
+    answers = session.get("answers", {})
+    results = []
 
-    # POST: 사용자가 답안을 제출했을 때
-    if request.method == 'POST':
-        user_ans = request.form.get('answer', '').strip()
-        # 채점
-        result = grade_problem(questions[q_idx], user_ans)
+    for idx, qid in enumerate(q_ids):
+        q = Question.query.get(qid)
+        if not q:
+            continue
+        user_ans = answers.get(str(idx), "")
+        question_data = {
+            "유형": db_type_to_label(q.type),  # DB코드 → 한글 라벨
+            "question_data": {
+                "question": q.question_text,
+                "answer": q.answer,
+                "explanation": q.explanation,
+                "choices": [c.text for c in q.choices],
+            },
+        }
+        res = grade_problem(question_data, user_ans)
+        results.append(res)
 
-        # 세션에 저장
-        grading = session.get('grading_results', [])
-        grading.append(result)
-        session['grading_results'] = grading
+        ua = UserAnswer(
+            user_id=session.get("user_id"),
+            question_id=qid,
+            user_answer=user_ans,
+            is_correct=res["is_correct"],
+            feedback=res["feedback"],
+            score=res["score"],
+        )
+        db.session.add(ua)
+    db.session.commit()
 
-        answers = session.get('answers', {})
-        answers[q_idx] = user_ans
-        session['answers'] = answers
+    return render_template("grade.html", grading_results=results, total=len(q_ids), hide_sidebar=True)
 
-        # 다음 문제로
-        return redirect(url_for('grade_step', q_idx=q_idx+1))
 
-    # GET: 현재 문제 보여주기
-    q = questions[q_idx]['question_data']
-    return render_template(
-        'grade_step.html',
-        question=q,
-        page=q.get('page'),
-        idx=q_idx,
-        total=len(questions),
-        prev_idx=q_idx-1 if q_idx>0 else None
-    )
-
-#-----------------------------
-# 결과, 다운로드, 전체 채점 라우트
+# ------------------------------
+# 쇼츠 생성 / 관리
 # ------------------------------
 @app.route("/results")
 def results():
@@ -905,174 +1019,89 @@ def results():
     generated_file = session.get("generated_file", "문제.json")
     return render_template("results.html", questions=questions, generated_file=generated_file)
 
+
 @app.route("/download")
 def download_file():
     generated_file = session.get("generated_file", None)
     if generated_file:
-        return send_file(os.path.join(app.config['UPLOAD_FOLDER'], generated_file), as_attachment=True)
-    flash("다운로드할 파일이 없습니다.")
+        return send_file(os.path.join(app.config["UPLOAD_FOLDER"], generated_file), as_attachment=True)
+    flash("다운로드할 파일이 없습니다.", "warning")
     return redirect(url_for("results"))
 
-@app.route('/grade', methods=['GET'])
-def grade():
-    """
-    Grades all answered questions, persists UserAnswer records, and shows results.
-    """
-    q_ids   = session.get('question_ids', [])
-    answers = session.get('answers', {})
-    results = []
-    # Loop through each question and compute result
-    for idx, qid in enumerate(q_ids):
-        q = Question.query.get(qid)
-        user_ans = answers.get(str(idx), '')
-        # Build a dict for grade_problem function
-        question_data = {
-            '유형': q.type,
-            'question_data': {
-                'question': q.question_text,
-                'answer': q.answer,
-                'explanation': q.explanation,
-                'choices': [c.text for c in q.choices]
-            }
-        }
-        res = grade_problem(question_data, user_ans)
-        results.append(res)
-        # Save grading result to DB
-        ua = UserAnswer(
-            user_id=session.get('user_id'),
-            question_id=qid,
-            user_answer=user_ans,
-            is_correct=res['is_correct'],
-            feedback=res['feedback'],
-            score=res['score']
-        )
-        db.session.add(ua)
-    db.session.commit()
 
-    return render_template(
-        'grade.html',
-        grading_results=results,
-        total=len(q_ids),
-        hide_sidebar=True
-    )
-# ---------------
-
-
-
-
-@app.route('/make_short', methods=['POST'])
+@app.route("/make_short", methods=["POST"])
 def make_short():
-    """
-    Generates shorts videos from quiz JSON and saves metadata to Video table.
-    """
-    quiz_id   = session.get('quiz_id')
+    quiz_id = session.get("quiz_id")
     json_fname = f"uploads/{session.get('generated_file')}"
     try:
         video_paths = create_shorts_from_json(json_fname)
     except Exception as e:
-        flash(str(e))
-        return redirect(url_for('results'))
+        flash(str(e), "danger")
+        return redirect(url_for("results"))
 
-    # Persist each video record
     for path in video_paths:
-        vid = Video(
-            quiz_id=quiz_id,
-            file_path=os.path.basename(path)
-        )
+        vid = Video(quiz_id=quiz_id, file_path=os.path.basename(path))
         db.session.add(vid)
     db.session.commit()
 
-    session['shorts'] = [os.path.basename(p) for p in video_paths]
-    flash(f"{len(video_paths)}개의 쇼츠 영상이 생성되었습니다.")
-    return redirect(url_for('results'))
+    session["shorts"] = [os.path.basename(p) for p in video_paths]
+    flash(f"{len(video_paths)}개의 쇼츠 영상이 생성되었습니다.", "success")
+    return redirect(url_for("results"))
 
 
-@app.route('/shorts', methods=['GET', 'POST'])
+@app.route("/shorts", methods=["GET", "POST"])
 def shorts():
-    # 업로드된 문제 JSON 파일 목록
-    json_files = sorted([
-        f for f in os.listdir(UPLOAD_FOLDER)
-        if f.endswith('_문제.json')
-    ])
+    json_files = sorted([f for f in os.listdir(UPLOAD_FOLDER) if f.endswith("_문제.json")])
 
-    if request.method == 'POST':
-        selected = request.form.getlist('selected_files')
+    if request.method == "POST":
+        selected = request.form.getlist("selected_files")
         if not selected:
-            flash('선택된 JSON 파일이 없습니다.')
-            return redirect(url_for('shorts'))
+            flash("선택된 JSON 파일이 없습니다.", "warning")
+            return redirect(url_for("shorts"))
 
         video_paths = []
         for fname in selected:
             json_path = os.path.join(UPLOAD_FOLDER, fname)
             try:
-                # JSON 별로 쇼츠 생성
                 paths = create_shorts_from_json(json_path)
                 video_paths.extend(paths)
             except Exception as e:
-                flash(f'{fname} 처리 중 오류: {e}')
+                flash(f"{fname} 처리 중 오류: {e}", "danger")
 
-        # OUTPUT_DIR(static/output) 안의 실제 파일명만 읽기
-        shorts_list = sorted([
-            os.path.basename(p)
-            for p in video_paths
-            if os.path.isfile(p)
-        ])
-        session['shorts'] = shorts_list
-        flash(f'{len(shorts_list)}개의 쇼츠가 생성되었습니다.')
-        return redirect(url_for('shorts'))
+        shorts_list = sorted([os.path.basename(p) for p in video_paths if os.path.isfile(p)])
+        session["shorts"] = shorts_list
+        flash(f"{len(shorts_list)}개의 쇼츠가 생성되었습니다.", "success")
+        return redirect(url_for("shorts"))
 
-    # GET: 세션에 남은 쇼츠 모음 혹은 static/output 전체
-    existing = session.get('shorts')
+    existing = session.get("shorts")
     if existing is None:
-        # 세션이 비어 있으면 디스크상의 전체 목록
         existing = sorted([
-            f for f in os.listdir(os.path.join(app.static_folder, 'output'))
-            if f.lower().endswith('.mp4')
+            f for f in os.listdir(os.path.join(app.static_folder, "output"))
+            if f.lower().endswith(".mp4")
         ])
 
-    return render_template(
-        'shorts.html',
-        files=json_files,
-        shorts=existing
-    )
+    return render_template("shorts.html", files=json_files, shorts=existing)
 
-@app.route('/output')
+
+@app.route("/output")
 def output_list():
-    """
-    static/output 폴더 안의 모든 파일을 읽어와
-    템플릿에 넘깁니다.
-    """
+    files = sorted([f for f in os.listdir(OUTPUT_DIR) if os.path.isfile(os.path.join(OUTPUT_DIR, f))])
+    return render_template("output_list.html", files=files)
 
 
-    # mp4 등 미디어 파일만 걸러내고 싶으면 확장자 필터 추가 가능
-    files = sorted([
-        f for f in os.listdir(OUTPUT_DIR)
-        if os.path.isfile(os.path.join(OUTPUT_DIR, f))
-    ])
-    return render_template('output_list.html', files=files)
-
-@app.route('/json_list')
+@app.route("/json_list")
 def json_list():
-    """
-    uploads 폴더 안의 모든 .json 파일 목록을 읽어서
-    json_list.html 템플릿에 넘겨줍니다.
-    """
     files = sorted(
         f for f in os.listdir(UPLOAD_FOLDER)
-        if os.path.isfile(os.path.join(UPLOAD_FOLDER, f)) and f.endswith('.json')
+        if os.path.isfile(os.path.join(UPLOAD_FOLDER, f)) and f.endswith(".json")
     )
-    return render_template('json_list.html', files=files)
+    return render_template("json_list.html", files=files)
 
-@app.route('/uploads/<path:filename>')
+
+@app.route("/uploads/<path:filename>")
 def uploaded_file(filename):
-    """
-    /uploads/<filename> 으로 호출하면
-    uploads/ 디렉터리에서 해당 파일을 inline 서빙합니다.
-    JSON, MP4, 뭐든 다 지원.
-    """
-    return send_from_directory(UPLOAD_FOLDER, filename, as_attachment=False)    
-
+    return send_from_directory(UPLOAD_FOLDER, filename, as_attachment=False)
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0" , port = 5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)

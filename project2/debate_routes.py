@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request
+from flask import Blueprint, render_template, request, redirect, url_for, render_template
 import openai
 
 debate_bp = Blueprint("debate", __name__)
